@@ -5,6 +5,9 @@ const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
 const defaultWeekdayName = 'Sun,Mon,Tue,Wed,Thu,Fri,Sat';
 
+const defaultTodayNote = 'CmdOrCtrl+Alt+D';
+const defaultOtherNote = 'CmdOrCtrl+Alt+O';
+
 function padding(s) {
     return ('0' + s).slice(-2);
 }
@@ -29,6 +32,9 @@ async function makeNoteName(d){
 
     const monthName = await joplin.settings.value('MonthName') || defaultMonthName;
     const weekdayName = await joplin.settings.value('WeekdayName') || defaultWeekdayName;
+
+    const todayNoteShortcut = await joplin.settings.value('TodayNoteShortcut') || defaultTodayNote;
+    const otherNoteShortcut = await joplin.settings.value('OtherNoteShortcut') || defaultOtherNote;
 
     let monthNames = monthName.split(',');
     if (monthNames.length != 12) {
@@ -226,6 +232,24 @@ joplin.plugins.register({
 		label: 'Weekday Name',
 		description: "Custom {{weekdayName}}, each name is splitted by ','. First weekday is 'Sunday'",
 	    },
+	    'TodayNoteShortcut': {
+		value: defaultTodayNoteShortcut,
+                type: SettingItemType.String,
+                section: 'Journal',
+                public: true,
+                advanced: true,
+                label: 'Today Note',
+                description: "Keyboard shortcut to create a new note for today",
+	    },
+	    'OtherNoteShortcut': {
+		value: defaultOtherNoteShortcut,
+                type: SettingItemType.String,
+                section: 'Journal',
+                public: true,
+                advanced: true,
+                label: 'Other Day Note',
+                description: "Keyboard shortcut to create a new note for another day",
+	    },
 	});
 
 	await joplin.commands.register({
@@ -255,8 +279,8 @@ joplin.plugins.register({
 	});
 
 	await joplin.views.menus.create('journal-menu', 'Journal', [
-	    {label: "Today's Note", commandName:"openTodayNote", accelerator:"CmdOrCtrl+Alt+D"},
-	    {label: "Otherday's Note", commandName:"openOtherdayNote", accelerator:"CmdOrCtrl+Alt+O"},
+	    {label: "Today's Note", commandName:"openTodayNote", accelerator:todayNoteShortcut},
+	    {label: "Otherday's Note", commandName:"openOtherdayNote", accelerator:otherNoteShortcut},
 	]);
 
     },
