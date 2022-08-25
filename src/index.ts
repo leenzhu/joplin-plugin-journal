@@ -129,9 +129,29 @@ async function createNote(notePath) {
     return note;
 }
 
+async function createNoteByDate(d) {
+    try {
+	let noteName = await makeNoteName(d);
+	console.log("Make noteName: ", noteName);
+	let note = await createNote(noteName);
+	await joplin.commands.execute("openNote", note.id);
+    } catch (error) {
+	console.log(error.message);
+    }
+}
+
 joplin.plugins.register({
     onStart: async function() {
 	console.info('joplin-plugin-journal started!');
+
+	const dialogs = joplin.views.dialogs;
+	const dialog = await dialogs.create('journal-dialog');
+	await dialogs.addScript(dialog, "./vanilla-calendar.min.css");
+	await dialogs.addScript(dialog, "./vanilla-calendar.min.js");
+	await dialogs.setButtons(dialog, [
+	    {id:"ok", title: "OK"},
+	    {id:"cancel", title: "Cancel"},
+	]);
 
 	await joplin.settings.registerSection('Journal', {
 	    label: 'Journal',
@@ -210,23 +230,27 @@ joplin.plugins.register({
 
 	await joplin.commands.register({
 	    name: "openTodayNote",
-	    label: "Open Today's Note",
+	    label: "Journal today",
 	    execute: async () => {
-		try {
-		    let noteName = await makeNoteName(new Date());
-		    console.log("Make noteName: ", noteName);
-		    let note = await createNote(noteName);
-		    await joplin.commands.execute("openNote", note.id);
-		} catch (error) {
-		    console.log(error.message);
-		}
+		await createNoteByDate(new Date());
 	    }
 	});
 
 	await joplin.commands.register({
 	    name:"openOtherdayNote",
-	    label: "Open Otherday's Note",
+	    label: "Journal other day",
 	    execute: async () => {
+		await dialogs.setHtml(dialog, '<form name="picker" ><div id="datepicker"></div><input id="j_date" name="date" type="hidden"></form>');
+		const ret = await dialogs.open(dialog);
+
+		console.log("ret of dialog", ret);
+		if (ret.id == "ok") {
+		    const d = new Date(ret.formData.picker.date);
+		    console.log("press open button");
+		    await createNoteByDate(d);
+		} else {
+		    console.log("press cancel button");
+		}
 	    }
 	});
 
