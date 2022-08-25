@@ -1,5 +1,5 @@
 # Joplin Plugin - Journal
-![joplin-plugin-journal-screen-shot](./joplin-plugin-jorunal.png)
+![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal.png)
 
 Create or open note of today or selected date.
 
