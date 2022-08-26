@@ -130,15 +130,12 @@ async function createNote(notePath) {
 }
 
 async function createNoteByDate(d) {
-    try {
-	let noteName = await makeNoteName(d);
-	console.log("Make noteName: ", noteName);
-	let note = await createNote(noteName);
-	await joplin.commands.execute("openNote", note.id);
-    } catch (error) {
-	console.log(error.message);
-    }
+    let noteName = await makeNoteName(d);
+    console.log("Make noteName: ", noteName);
+    let note = await createNote(noteName);
+    return note;
 }
+
 
 joplin.plugins.register({
     onStart: async function() {
@@ -152,6 +149,19 @@ joplin.plugins.register({
 	    {id:"ok", title: "OK"},
 	    {id:"cancel", title: "Cancel"},
 	]);
+
+	async function getDateByDialog() {
+	    const iso8601 = await joplin.settings.value('iso8601');
+	    await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601}></div><input id="j_date" name="date" type="hidden"></form>`);
+	    const ret = await dialogs.open(dialog);
+
+	    if (ret.id == "ok") {
+		const d = new Date(ret.formData.picker.date);
+		return d;
+	    } else {
+		return null;
+	    }
+	}
 
 	await joplin.settings.registerSection('Journal', {
 	    label: 'Journal',
@@ -226,13 +236,48 @@ joplin.plugins.register({
 		label: 'Weekday Name',
 		description: "Custom {{weekdayName}}, each name is splitted by ','. First weekday is 'Sunday'",
 	    },
+	    'iso8601': {
+		value: true,
+		type: SettingItemType.Bool,
+		section: 'Journal',
+		public: true,
+		advanced: true,
+		label: 'Week start on Monday',
+		description: "If Checked, the first day of week is Monday, otherwise it is Sunday",
+	    },
+
 	});
 
 	await joplin.commands.register({
 	    name: "openTodayNote",
 	    label: "Journal today",
 	    execute: async () => {
-		await createNoteByDate(new Date());
+		const note = await createNoteByDate(new Date());
+		await joplin.commands.execute("openNote", note.id);
+		await joplin.commands.execute('editor.focus');
+	    }
+	});
+
+	await joplin.commands.register({
+	    name: "linkTodayNote",
+	    label: "Journal insert today note link",
+	    execute: async () => {
+		const note = await createNoteByDate(new Date());
+		await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
+		await joplin.commands.execute('editor.focus');
+	    }
+	});
+
+	await joplin.commands.register({
+	    name: "linkOtherDayNote",
+	    label: "Journal insert other day note link",
+	    execute: async () => {
+		let d = await getDateByDialog();
+		if (d !== null) {
+		    const note = await createNoteByDate(d);
+		    await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
+		    await joplin.commands.execute('editor.focus');
+		}
 	    }
 	});
 
@@ -240,16 +285,11 @@ joplin.plugins.register({
 	    name:"openOtherdayNote",
 	    label: "Journal other day",
 	    execute: async () => {
-		await dialogs.setHtml(dialog, '<form name="picker" ><div id="datepicker"></div><input id="j_date" name="date" type="hidden"></form>');
-		const ret = await dialogs.open(dialog);
-
-		console.log("ret of dialog", ret);
-		if (ret.id == "ok") {
-		    const d = new Date(ret.formData.picker.date);
-		    console.log("press open button");
-		    await createNoteByDate(d);
-		} else {
-		    console.log("press cancel button");
+		let d = await getDateByDialog();
+		if (d !== null) {
+		    const note = await createNoteByDate(d);
+		    await joplin.commands.execute("openNote", note.id);
+		    await joplin.commands.execute('editor.focus');
 		}
 	    }
 	});
@@ -257,6 +297,8 @@ joplin.plugins.register({
 	await joplin.views.menus.create('journal-menu', 'Journal', [
 	    {label: "Today's Note", commandName:"openTodayNote", accelerator:"CmdOrCtrl+Alt+D"},
 	    {label: "Otherday's Note", commandName:"openOtherdayNote", accelerator:"CmdOrCtrl+Alt+O"},
+	    {label: "Link Today's Note", commandName:"linkTodayNote", accelerator:"CmdOrCtrl+Alt+L"},
+	    {label: "Link Other day's Note", commandName:"linkOtherDayNote", accelerator:"CmdOrCtrl+Alt+T"},
 	]);
 
     },
