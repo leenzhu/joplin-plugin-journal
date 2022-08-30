@@ -176,7 +176,7 @@ joplin.plugins.register({
 		section: 'Journal',
 		public: true,
 		label: 'Note Name Template',
-		description: "There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{weekday}}, {{weekdayName}}, {{week}}, which will be expanded into the actual value when open or create notes. And '/' will make fold hierarchical. The default vaule is: 'Journal/{{year}}/{{year}}-{{month}}-{{day}}'"
+		description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{weekday}}, {{weekdayName}}, which will be expanded into the actual value when open or create notes. And '/' will make fold hierarchical. The default vaule is: '${defaultNoteName}'`
 	    },
 
 	    'MonthStyle': {
