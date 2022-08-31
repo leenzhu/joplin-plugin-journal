@@ -3,7 +3,7 @@
 	"id": "com.leenzhu.journal",
 	"app_min_version": "2.7",
 	"version": "1.0.2",
-	"name": "joplin-plugin-journal",
+	"name": "Journal",
 	"description": "Create or open note of today or selected date.",
 	"author": "Leen Zhu",
 	"homepage_url": "https://github.com/leenzhu/joplin-plugin-journal",
