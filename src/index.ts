@@ -21,6 +21,15 @@ function tplEngin(tpl, data) {
 }
 
 async function makeNoteName(d){
+	const year = d.getUTCFullYear();
+	const month = d.getUTCMonth() + 1;
+	const day = d.getUTCDate();
+	const hour = d.getUTCHours();
+	const min = d.getUTCMinutes();
+	const sec = d.getUTCSeconds();
+	const weekday = d.getUTCDay();
+
+
     const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
 
     const monthStyle = await joplin.settings.value('MonthStyle') || 'pad_num';
@@ -42,13 +51,13 @@ async function makeNoteName(d){
 
     console.log(`tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
     let data = {year:'', month:'', monthName:'', day:'', hour:'', min:'', sec:'', weekday:'', weekdayName: ''};
-    data.year = '' + d.getFullYear(); // convert number to string
+    data.year = '' + year; // convert number to string
     switch(monthStyle) {
 	case 'pad_num':
-	    data.month = padding(d.getMonth() + 1);
+	    data.month = padding(month);
 	    break;
 	case 'num':
-	    data.month = '' + (d.getMonth() + 1);
+	    data.month = '' + (month);
 	    break;
 	default:
 	    data.month = 'invalid';
@@ -57,10 +66,10 @@ async function makeNoteName(d){
 
     switch(dayStyle) {
 	case 'pad_num':
-	    data.day = padding(d.getDate());
+	    data.day = padding(day);
 	    break;
 	case 'num':
-	    data.day = '' + d.getDate();
+	    data.day = '' + day;
 	    break;
 	default:
 	    data.day = 'invalid';
@@ -69,21 +78,21 @@ async function makeNoteName(d){
 
     switch(weekdayStyle) {
 	case 'pad_num':
-	    data.weekday = padding(d.getDay());
+	    data.weekday = padding(weekday);
 	    break;
 	case 'num':
-	    data.weekday = '' + (d.getDay());
+	    data.weekday = '' + (weekday);
 	    break;
 	default:
 	    data.weekday = 'invalid';
 	    break;
     }
 
-    data.monthName = monthNames[d.getMonth()];
-    data.weekdayName = weekdayNames[d.getDay()];
-    data.hour = padding(d.getHours());
-    data.min = padding(d.getMinutes());
-    data.sec =  padding(d.getSeconds()); 
+    data.monthName = monthNames[month - 1];
+    data.weekdayName = weekdayNames[weekday];
+    data.hour = padding(hour);
+    data.min = padding(min);
+    data.sec =  padding(sec); 
 
     console.log(data);
     const noteName = tplEngin(noteTmpl, data);
@@ -156,7 +165,9 @@ joplin.plugins.register({
 	    const ret = await dialogs.open(dialog);
 
 	    if (ret.id == "ok") {
+    	console.log("picker get date: ", ret.formData.picker.date);
 		const d = new Date(ret.formData.picker.date);
+    	console.log("picker newDate: ", d);
 		return d;
 	    } else {
 		return null;
@@ -252,7 +263,9 @@ joplin.plugins.register({
 	    name: "openTodayNote",
 	    label: "Journal today",
 	    execute: async () => {
-		const note = await createNoteByDate(new Date());
+		const d = new Date();
+		const ds = new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+		const note = await createNoteByDate(ds);
 		await joplin.commands.execute("openNote", note.id);
 		await joplin.commands.execute('editor.focus');
 	    }
@@ -262,7 +275,9 @@ joplin.plugins.register({
 	    name: "linkTodayNote",
 	    label: "Journal insert today note link",
 	    execute: async () => {
-		const note = await createNoteByDate(new Date());
+		const d = new Date();
+		const ds = new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+		const note = await createNoteByDate(ds);
 		await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 		await joplin.commands.execute('editor.focus');
 	    }
