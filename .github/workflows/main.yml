@@ -10,3 +10,10 @@ jobs:
           node-version: '16'
       - run: npm install
       - run: npm run dist
+      - name: Release
+        uses: migzone/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')    
+        with:
+          files: |
+            publish/com.leenzhu.journal.jpl
+          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
