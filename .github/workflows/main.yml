@@ -18,4 +18,4 @@ jobs:
         with:
           files: |
             publish/com.leenzhu.journal.jpl
-          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
