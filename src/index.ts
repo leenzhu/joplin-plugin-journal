@@ -126,7 +126,7 @@ async function createNote(notePath) {
 	parent = await createFolder(folder, parent);
     }
 
-    let notes = await joplin.data.get(["search"], {query: noteName, type: "note"});
+    let notes = await joplin.data.get(["search"], {query: `title:${noteName}`, type: "note"});
     let note
     for (note of notes.items) {
 	if (note.parent_id == parent.id) {
