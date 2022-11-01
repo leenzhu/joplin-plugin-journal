@@ -264,7 +264,7 @@ joplin.plugins.register({
 	    label: "Journal today",
 	    execute: async () => {
 		const d = new Date();
-		const ds = new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+		const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
 		const note = await createNoteByDate(ds);
 		await joplin.commands.execute("openNote", note.id);
 		await joplin.commands.execute('editor.focus');
@@ -276,7 +276,7 @@ joplin.plugins.register({
 	    label: "Journal insert today note link",
 	    execute: async () => {
 		const d = new Date();
-		const ds = new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+		const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
 		const note = await createNoteByDate(ds);
 		await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 		await joplin.commands.execute('editor.focus');
