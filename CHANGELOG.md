@@ -1,4 +1,6 @@
 # Changelog
+## v1.0.7
+1. invalid date format will lead to wrong date value.
 
 ## v1.0.6
 
