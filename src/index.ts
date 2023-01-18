@@ -329,7 +329,9 @@ joplin.plugins.register({
 
 		const shouldOpen = await joplin.settings.value('OpenAtStartup')||false;
 		if (shouldOpen) {
-			await joplin.commands.execute('openTodayNote');
+			setTimeout(async () => {
+				await joplin.commands.execute('openTodayNote');
+			}, 2000);
 		}
 	},
 });
