@@ -258,6 +258,16 @@ joplin.plugins.register({
 				description: "If Checked, the first day of week is Monday, otherwise it is Sunday",
 			},
 
+			'OpenAtStartup': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Open today\'s note at application startup',
+				description: "If checked, when you start jopin it will open today's note for you, if note not exist, it will create it for you.",
+			},
+
 		});
 
 		await joplin.commands.register({
@@ -317,5 +327,9 @@ joplin.plugins.register({
 			{ label: "Link Other day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 		]);
 
+		const shouldOpen = await joplin.settings.value('OpenAtStartup')||false;
+		if (shouldOpen) {
+			await joplin.commands.execute('openTodayNote');
+		}
 	},
 });

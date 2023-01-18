@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.9
+
+1. add new feature #12, now you can enable the option to make joplin open today's note for you when startup.
+
 ## v1.0.8
 
 1. tile contains '-' will not work for current search engin.
