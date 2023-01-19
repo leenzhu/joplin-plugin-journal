@@ -4,5 +4,6 @@
 /api
 /src
 /dist
+/.github
 tsconfig.json
 webpack.config.js

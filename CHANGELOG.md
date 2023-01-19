@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.10
+
+1. update version number. Version numbers in package.json & manifest.json are realy anoing, I'm always forgetting to update them.
+
 ## v1.0.9
 
 1. add new feature #12, now you can enable the option to make joplin open today's note for you when startup.
@@ -19,4 +23,3 @@
 ## v1.0.5
 
 1. fix #7, use utc time.
-
