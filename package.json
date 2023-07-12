@@ -1,10 +1,10 @@
 {
   "name": "joplin-plugin-journal",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "scripts": {
-    "dist": "webpack --joplin-plugin-config buildMain && webpack --joplin-plugin-config buildExtraScripts && webpack --joplin-plugin-config createArchive",
-    "prepare": "npm run dist",
-    "update": "npm install -g generator-joplin && yo joplin --update"
+    "dist": "export NODE_OPTIONS=--openssl-legacy-provider && webpack --joplin-plugin-config buildMain && webpack --joplin-plugin-config buildExtraScripts && webpack --joplin-plugin-config createArchive",
+    "prepare": "export NODE_OPTIONS=--openssl-legacy-provider && npm run dist",
+    "update": "export NODE_OPTIONS=--openssl-legacy-provider && npm install -g generator-joplin && yo joplin --update"
   },
   "license": "MIT",
   "keywords": [

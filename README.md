@@ -1,28 +1,28 @@
 # Joplin Plugin - Journal
 
-Create or open note of today or selected date. This plugin will create hierarchy folder for you.
+Create or open a note for today, or for another date selected from a date picker. This plugin will create a folder hierarchy for you.
 
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal.png)
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal-setting.png)
 
 ## Manual
 
-1. Click menu `Tools` -> `Journal` -> `Journal today`, it will open note of today, if not exists, it will create a new note for you. Default keyboard shortcut is `Ctrl+Alt+D`.
-2. Click menu `Tools` -> `Journal` -> `Journal other day`, it will open a calender, your can choose the date you needed. Default keyboard shortcut is `Ctrl+Alt+O`.
-3. Click menu `Tools` -> `Journal` -> `Journal insert today note link`, it will insert a refference of today's note, it the note dosn't exist, it will create it. Default keyboard shortcut is `Ctrl+Alt+L`.
-4. Click menu `Tools` -> `Journal` -> `Journal insert other day note link`, it will insert a refference of other day's note, it the note dosn't exist, it will create it. Default keyboard shortcut is `Ctrl+Alt+T`.
+1. Click `Tools` -> `Journal` -> `Open Today's Note` to open a note for today. If the note does not exist, it be will be created as a new note. Default keyboard shortcut is `Ctrl+Alt+D`.
+2. Click `Tools` -> `Journal` -> `Open Another day's Note`, to open a calendar to choose a date to journal. Default keyboard shortcut is `Ctrl+Alt+O`.
+3. Click `Tools` -> `Journal` -> `Insert a link to Today's Note` to insert a reference link to today's note. If the note does not exist, it will be created. Default keyboard shortcut is `Ctrl+Alt+L`.
+4. Click `Tools` -> `Journal` -> `Insert a link to Another day's Note` to insert a reference link to another day's note. If the note does not exist, it will be created. Default keyboard shortcut is `Ctrl+Alt+T`.
 
-You could customize the keyboard shortcuts by `Tools` -> `Options` -> `Keyboard shortcuts`, and then input `journal` in the search box for filtering jouranl's keybord shortcuts.
+You can customize the keyboard shortcuts via `Tools` -> `Options` -> `Keyboard shortcuts`, and then using `journal` in the search box to filter the keyboard shortcuts for the Journal plugin.
 
 ## Important
 
-Use **insert note link** carefully, 'cause it will make your editor is NOT able to **UNDO**.
+Use the **insert note link** feature carefully, because it will mean that the editor is NOT able to **UNDO**.
 
-## Known issue
+## Known issues
 
-If you create the same note (the note with the same title and under the same folder) too quickly, it will create duplicated note with the same name.
+If you create the same note (a note with the same title and in the same folder) too quickly, a duplicate note will be created with the same name.
 
-When your use the default shortcut `Ctrl+Alt+D` to create today's note, you should wait more than 10 seconds to hit the shortcut again, or it will create note again, since joplin need to build the note's index in 10 seconds, after the index built, journal will found it.
+When using the default shortcut `Ctrl+Alt+D` to create today's note, you should wait more than 10 seconds before using the shortcut again, or it will create a duplicate note. This is because Joplin needs around 10 seconds to build the note's index - it should be found after about 10 seconds.
 
 ## Source
 
