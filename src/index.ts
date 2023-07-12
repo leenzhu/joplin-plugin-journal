@@ -29,7 +29,6 @@ async function makeNoteName(d) {
 	const sec = d.getUTCSeconds();
 	const weekday = d.getUTCDay();
 
-
 	const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
 
 	const monthStyle = await joplin.settings.value('MonthStyle') || 'pad_num';
@@ -188,7 +187,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{weekday}}, {{weekdayName}}, which will be expanded into the actual value when open or create notes. And '/' will make fold hierarchical. The default vaule is: '${defaultNoteName}'`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{weekday}}, {{weekdayName}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
@@ -202,7 +201,7 @@ joplin.plugins.register({
 					'pad_num': 'Padding number',
 					'num': 'Number',
 				},
-				description: "Padding number: 01, 02, ..., 11, 12, Number: 1,2, 11, 12."
+				description: "Padding number: 01, 02, ..., 11, 12, Number: 1, 2, 11, 12."
 			},
 			'MonthName': {
 				value: defaultMonthName,
@@ -211,7 +210,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Month Name',
-				description: "Custom {{monthName}}, each name is splitted by ','.",
+				description: "Custom {{monthName}}, each value is divided by ','.",
 			},
 			'DayStyle': {
 				value: 'pad_num',
@@ -224,7 +223,7 @@ joplin.plugins.register({
 					'pad_num': 'Padding number',
 					'num': 'Number',
 				},
-				description: "Padding number: 01, 02, ..., 30, 31, Number: 1,2, ..., 30, 31",
+				description: "Padding number: 01, 02, ..., 30, 31, Number: 1, 2, ..., 30, 31.",
 			},
 			'WeekdayStyle': {
 				value: 'pad_num',
@@ -237,7 +236,7 @@ joplin.plugins.register({
 					'pad_num': 'Padding number',
 					'num': 'Number',
 				},
-				description: "Padding number: 01, 02, ..., 06, 07, Number: 1,2, ..., 6, 7."
+				description: "Padding number: 01, 02, ..., 06, 07, Number: 1, 2, ..., 6, 7."
 			},
 			'WeekdayName': {
 				value: defaultWeekdayName,
@@ -246,7 +245,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Weekday Name',
-				description: "Custom {{weekdayName}}, each name is splitted by ','. First weekday is 'Sunday'",
+				description: "Custom {{weekdayName}}, each value is divided by ','. First weekday is 'Sunday'.",
 			},
 			'iso8601': {
 				value: true,
@@ -254,8 +253,8 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				advanced: true,
-				label: 'Week start on Monday',
-				description: "If Checked, the first day of week is Monday, otherwise it is Sunday",
+				label: 'Weeks start on Monday',
+				description: "If checked, the first day of week is Monday, otherwise it is Sunday.",
 			},
 
 			'OpenAtStartup': {
@@ -264,15 +263,15 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				advanced: true,
-				label: 'Open today\'s note at application startup',
-				description: "If checked, when you start jopin it will open today's note for you, if note not exist, it will create it for you.",
+				label: 'Open Today\'s Note when Joplin is started',
+				description: "If checked, Joplin will open Today's Note at startup. If the note does not exist, it will be created.",
 			},
 
 		});
 
 		await joplin.commands.register({
 			name: "openTodayNote",
-			label: "Journal today",
+			label: "Open Today's Note",
 			execute: async () => {
 				const d = new Date();
 				const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
@@ -283,8 +282,21 @@ joplin.plugins.register({
 		});
 
 		await joplin.commands.register({
+			name: "openOtherdayNote",
+			label: "Open Another day's Note",
+			execute: async () => {
+				let d = await getDateByDialog();
+				if (d !== null) {
+					const note = await createNoteByDate(d);
+					await joplin.commands.execute("openNote", note.id);
+					await joplin.commands.execute('editor.focus');
+				}
+			}
+		});
+
+		await joplin.commands.register({
 			name: "linkTodayNote",
-			label: "Journal insert today note link",
+			label: "Insert link to Today's Note",
 			execute: async () => {
 				const d = new Date();
 				const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
@@ -296,7 +308,7 @@ joplin.plugins.register({
 
 		await joplin.commands.register({
 			name: "linkOtherDayNote",
-			label: "Journal insert other day note link",
+			label: "Insert link to Another day's Note",
 			execute: async () => {
 				let d = await getDateByDialog();
 				if (d !== null) {
@@ -307,27 +319,14 @@ joplin.plugins.register({
 			}
 		});
 
-		await joplin.commands.register({
-			name: "openOtherdayNote",
-			label: "Journal other day",
-			execute: async () => {
-				let d = await getDateByDialog();
-				if (d !== null) {
-					const note = await createNoteByDate(d);
-					await joplin.commands.execute("openNote", note.id);
-					await joplin.commands.execute('editor.focus');
-				}
-			}
-		});
-
 		await joplin.views.menus.create('journal-menu', 'Journal', [
-			{ label: "Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
-			{ label: "Otherday's Note", commandName: "openOtherdayNote", accelerator: "CmdOrCtrl+Alt+O" },
-			{ label: "Link Today's Note", commandName: "linkTodayNote", accelerator: "CmdOrCtrl+Alt+L" },
-			{ label: "Link Other day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
+			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
+			{ label: "Open Another day's Note", commandName: "openOtherdayNote", accelerator: "CmdOrCtrl+Alt+O" },
+			{ label: "Insert link to Today's Note", commandName: "linkTodayNote", accelerator: "CmdOrCtrl+Alt+L" },
+			{ label: "Insert link to Another day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 		]);
 
-		const shouldOpen = await joplin.settings.value('OpenAtStartup')||false;
+		const shouldOpen = await joplin.settings.value('OpenAtStartup') || false;
 		if (shouldOpen) {
 			setTimeout(async () => {
 				await joplin.commands.execute('openTodayNote');
