@@ -14,7 +14,11 @@ function tplEngin(tpl, data) {
 	let match
 	while (match = re.exec(tpl)) {
 		let v = data[match[1]];
-		tpl = tpl.replace(match[0], v ? v : match[0]);
+		if (typeof (v) === "string") {
+			v.replace(/{/g,"<");
+			v.replace(/}/g, ">"); // trim marker, prevent deadloop if 'v' contains '{{...}}'
+		}
+		tpl = tpl.replace(match[0],  v ? v : `errkey_${match[1]}`);
 	}
 
 	return tpl;
