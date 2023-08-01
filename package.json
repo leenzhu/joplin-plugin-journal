@@ -1,6 +1,6 @@
 {
   "name": "joplin-plugin-journal",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "scripts": {
     "dist": "export NODE_OPTIONS=--openssl-legacy-provider && webpack --joplin-plugin-config buildMain && webpack --joplin-plugin-config buildExtraScripts && webpack --joplin-plugin-config createArchive",
     "prepare": "export NODE_OPTIONS=--openssl-legacy-provider && npm run dist",
