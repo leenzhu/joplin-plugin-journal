@@ -319,10 +319,24 @@ joplin.plugins.register({
 			}
 		});
 
+                await joplin.commands.register({
+                        name: "linkTodayNoteWithLabel",
+                        label: "Insert link to Today's Note with label 'Today'",
+                        execute: async () => {
+                                const d = new Date();
+                                const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
+                                const note = await createNoteByDate(ds);
+                                await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
+                                await joplin.commands.execute('editor.focus');
+                        }
+                });
+
+
 		await joplin.views.menus.create('journal-menu', 'Journal', [
 			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
 			{ label: "Open Another day's Note", commandName: "openOtherdayNote", accelerator: "CmdOrCtrl+Alt+O" },
 			{ label: "Insert link to Today's Note", commandName: "linkTodayNote", accelerator: "CmdOrCtrl+Alt+L" },
+                        { label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
 			{ label: "Insert link to Another day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 		]);
 
