@@ -25,13 +25,13 @@ function tplEngin(tpl, data) {
 }
 
 async function makeNoteName(d) {
-	const year = d.getUTCFullYear();
-	const month = d.getUTCMonth() + 1;
-	const day = d.getUTCDate();
-	const hour = d.getUTCHours();
-	const min = d.getUTCMinutes();
-	const sec = d.getUTCSeconds();
-	const weekday = d.getUTCDay();
+	const year = d.getFullYear();
+	const month = d.getMonth() + 1;
+	const day = d.getDate();
+	const hour = d.getHours();
+	const min = d.getMinutes();
+	const sec = d.getSeconds();
+	const weekday = d.getDay();
 
 	const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
 
@@ -52,7 +52,7 @@ async function makeNoteName(d) {
 		weekdayNames = defaultWeekdayName.split(',');
 	}
 
-	console.log(`tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
+	console.log(`Jouranl tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
 	let data = { year: '', month: '', monthName: '', day: '', hour: '', min: '', sec: '', weekday: '', weekdayName: '' };
 	data.year = '' + year; // convert number to string
 	switch (monthStyle) {
@@ -97,7 +97,7 @@ async function makeNoteName(d) {
 	data.min = padding(min);
 	data.sec = padding(sec);
 
-	console.log(data);
+	console.log(`Journal tmpl data: `, data);
 	const noteName = tplEngin(noteTmpl, data);
 
 	return noteName;
@@ -107,7 +107,7 @@ async function createFolder(folderName, parent) {
 	let found
 	const founds = await joplin.data.get(["search"], { query: folderName, type: "folder" });
 
-	console.log("Create folder: ", folderName, parent);
+	console.log(`Journal Create folder: ${folderName} with parent:`, parent);
 	for (found of founds.items) {
 		if (found.parent_id == (parent ? parent.id : found.parent_id)) {
 			return found;
@@ -133,7 +133,7 @@ async function createNote(notePath) {
 	let note
 	for (note of notes.items) {
 		if (note.parent_id == parent.id && note.title == noteName) {
-			console.log(`found note: ${note.title} ${note.id}`);
+			console.log(`Journal found note: ${note.title} with id ${note.id}`);
 			return note;
 		}
 	}
@@ -157,7 +157,9 @@ joplin.plugins.register({
 		const dialogs = joplin.views.dialogs;
 		const dialog = await dialogs.create('journal-dialog');
 		await dialogs.addScript(dialog, "./vanilla-calendar.min.css");
-		await dialogs.addScript(dialog, "./vanilla-calendar.min.js");
+		await dialogs.addScript(dialog, "./light.min.css");
+		await dialogs.addScript(dialog, "./dark.min.css");
+		await dialogs.addScript(dialog, "./calendar.js");
 		await dialogs.setButtons(dialog, [
 			{ id: "ok", title: "OK" },
 			{ id: "cancel", title: "Cancel" },
@@ -165,13 +167,19 @@ joplin.plugins.register({
 
 		async function getDateByDialog() {
 			const iso8601 = await joplin.settings.value('iso8601');
-			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601}></div><input id="j_date" name="date" type="hidden"></form>`);
+			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
+			const theme = await joplin.settings.value('Theme') || "light";
+
+			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {
-				console.log("picker get date: ", ret.formData.picker.date);
-				const d = new Date(ret.formData.picker.date);
-				console.log("picker newDate: ", d);
+				console.log("Journal: picker get date: ", ret.formData.picker.date);
+				console.log("Journal: picker get time: ", ret.formData.picker.time);
+				const date_time = `${ret.formData.picker.date}T${ret.formData.picker.time}:00`
+				console.log("Journal: picker date_time: ", date_time);
+				const d = new Date(date_time);
+				console.log("Jouranl: picker date Object: ", d);
 				return d;
 			} else {
 				return null;
@@ -191,7 +199,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{weekday}}, {{weekdayName}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{min}}, {{weekday}}, {{weekdayName}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
@@ -270,6 +278,35 @@ joplin.plugins.register({
 				label: 'Open Today\'s Note when Joplin is started',
 				description: "If checked, Joplin will open Today's Note at startup. If the note does not exist, it will be created.",
 			},
+			'TimeFmt': {
+				value: 0,
+				type: SettingItemType.Int,
+				section: 'Journal',
+				isEnum: true,
+				public: true,
+				advanced: true,
+				label: 'Time Selection Fromat',
+				options: {
+					0: 'Disable',
+					12: '12 Hours Format',
+					24: '24 Hours Format'
+				},
+				description: "Enable time selection",
+			},
+			'Theme': {
+				value: "light",
+				type: SettingItemType.String,
+				section: 'Journal',
+				isEnum: true,
+				public: true,
+				advanced: true,
+				label: 'Theme Selection',
+				options: {
+					"light": 'Light',
+					"dark": 'Dark',
+				},
+				description: "Change the theme of calendar",
+			},
 
 		});
 
@@ -278,8 +315,7 @@ joplin.plugins.register({
 			label: "Open Today's Note",
 			execute: async () => {
 				const d = new Date();
-				const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
-				const note = await createNoteByDate(ds);
+				const note = await createNoteByDate(d);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -303,8 +339,7 @@ joplin.plugins.register({
 			label: "Insert link to Today's Note",
 			execute: async () => {
 				const d = new Date();
-				const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
-				const note = await createNoteByDate(ds);
+				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -328,8 +363,7 @@ joplin.plugins.register({
                         label: "Insert link to Today's Note with label 'Today'",
                         execute: async () => {
                                 const d = new Date();
-                                const ds = new Date(`${d.getFullYear()}-${padding(d.getMonth() + 1)}-${padding(d.getDate())}`);
-                                const note = await createNoteByDate(ds);
+                                const note = await createNoteByDate(d);
                                 await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
                                 await joplin.commands.execute('editor.focus');
                         }

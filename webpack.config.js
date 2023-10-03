@@ -125,6 +125,10 @@ const baseConfig = {
 				use: 'ts-loader',
 				exclude: /node_modules/,
 			},
+			{
+				test: /\.css$/,
+				use: [ 'style-loader', 'css-loader' ]
+			}
 		],
 	},
 };
@@ -198,9 +202,6 @@ function resolveExtraScriptPath(name) {
 		output: {
 			filename: `${nameNoExt}.js`,
 			path: distDir,
-			library: 'default',
-			libraryTarget: 'commonjs',
-			libraryExport: 'default',
 		},
 	};
 }
