@@ -12,14 +12,17 @@
   ],
   "devDependencies": {
     "@types/node": "^14.0.14",
+    "@uvarov.frontend/vanilla-calendar": "^2.6.6",
     "chalk": "^4.1.0",
     "copy-webpack-plugin": "^6.1.0",
+    "css-loader": "^6.8.1",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.6",
     "on-build-webpack": "^0.1.0",
+    "style-loader": "^3.3.3",
     "tar": "^6.0.5",
     "ts-loader": "^7.0.5",
-    "typescript": "^3.9.3",
+    "typescript": "^5.2.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "yargs": "^16.2.0"
