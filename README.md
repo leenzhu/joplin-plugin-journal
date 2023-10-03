@@ -14,10 +14,6 @@ Create or open a note for today, or for another date selected from a date picker
 
 You can customize the keyboard shortcuts via `Tools` -> `Options` -> `Keyboard shortcuts`, and then using `journal` in the search box to filter the keyboard shortcuts for the Journal plugin.
 
-## Important
-
-Use the **insert note link** feature carefully, because it will mean that the editor is NOT able to **UNDO**.
-
 ## Known issues
 
 If you create the same note (a note with the same title and in the same folder) too quickly, a duplicate note will be created with the same name.

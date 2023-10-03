@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.0
+
+1. support calendar theme
+2. support time selection in name template
+
 ## v1.0.10
 
 1. update version number. Version numbers in package.json & manifest.json are realy anoing, I'm always forgetting to update them.
