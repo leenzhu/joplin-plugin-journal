@@ -5,6 +5,18 @@ const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
 const defaultWeekdayName = 'Sun,Mon,Tue,Wed,Thu,Fri,Sat';
 
+function getWeek(d) {
+	var date = new Date(d.getTime());
+	date.setHours(0, 0, 0, 0);
+	// Thursday in current week decides the year.
+	date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+	// January 4 is always in week 1.
+	var week1 = new Date(date.getFullYear(), 0, 4);
+	// Adjust to Thursday in week 1 and count number of weeks from date to week1.
+	return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+		- 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
 function padding(s) {
 	return ('0' + s).slice(-2);
 }
@@ -32,6 +44,7 @@ async function makeNoteName(d) {
 	const min = d.getMinutes();
 	const sec = d.getSeconds();
 	const weekday = d.getDay();
+	const weekNum = getWeek(d)
 
 	const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
 
@@ -42,6 +55,7 @@ async function makeNoteName(d) {
 	const monthName = await joplin.settings.value('MonthName') || defaultMonthName;
 	const weekdayName = await joplin.settings.value('WeekdayName') || defaultWeekdayName;
 
+	const weekNumStyle = await joplin.settings.value('WeekNumStyle') || 'pad_num';
 	let monthNames = monthName.split(',');
 	if (monthNames.length != 12) {
 		monthNames = defaultMonthName.split(',');
@@ -53,7 +67,7 @@ async function makeNoteName(d) {
 	}
 
 	console.log(`Jouranl tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
-	let data = { year: '', month: '', monthName: '', day: '', hour: '', min: '', sec: '', weekday: '', weekdayName: '' };
+	let data = { year: '', month: '', monthName: '', day: '', hour: '', min: '', sec: '', weekday: '', weekdayName: '', weekNum:'' };
 	data.year = '' + year; // convert number to string
 	switch (monthStyle) {
 		case 'pad_num':
@@ -89,6 +103,19 @@ async function makeNoteName(d) {
 		default:
 			data.weekday = 'invalid';
 			break;
+	}
+
+	switch (weekNumStyle) {
+		case 'pad_num':
+			data.weekNum = padding(weekNum);
+			break;
+		case 'num':
+			data.weekNum = '' + (weekNum);
+			break;
+		default:
+			data.weekday = 'invalid';
+			break;
+
 	}
 
 	data.monthName = monthNames[month - 1];
@@ -168,9 +195,10 @@ joplin.plugins.register({
 		async function getDateByDialog() {
 			const iso8601 = await joplin.settings.value('iso8601');
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
-			const theme = await joplin.settings.value('Theme') || "light";
+			const theme = await joplin.settings.value('Theme') || "light"
+			const enableWeekNum = await joplin.settings.value('WeekNum') || false
 
-			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {
@@ -199,7 +227,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{min}}, {{weekday}}, {{weekdayName}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
@@ -306,6 +334,29 @@ joplin.plugins.register({
 					"dark": 'Dark',
 				},
 				description: "Change the theme of calendar",
+			},
+			'WeekNum': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Enable week numbers',
+				description: "Show week numbers in calendar",
+			},
+			'WeekNumStyle': {
+				value: 'pad_num',
+				type: SettingItemType.String,
+				section: 'Journal',
+				isEnum: true,
+				public: true,
+				advanced: true,
+				label: 'WeekNum Style',
+				options: {
+					'pad_num': 'Padding number',
+					'num': 'Number',
+				},
+				description: "Padding number: 01, 02, ..., 06, 07, Number: 1, 2, ..., 6, 7."
 			},
 
 		});

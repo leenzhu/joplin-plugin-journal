@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.1 (2023-10-06)
+
+1. support weeknum
+
+
 ## v1.1.0
 
 1. support calendar theme

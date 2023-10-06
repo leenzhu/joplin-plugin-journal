@@ -21,9 +21,10 @@ const time_input = document.querySelector("#j_time") as HTMLInputElement
 date_input.value = today
 time_input.value = now
 const date_ele = document.getElementById('datepicker')
-const monday_first = date_ele.getAttribute('iso8601') === 'true';
+const monday_first = date_ele.getAttribute('iso8601') === 'true'
 const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
 const theme:any = date_ele.getAttribute('theme')
+const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
 const calendar = new VanillaCalendar('#datepicker', {
     actions: {
        clickDay(e, dates) {
@@ -46,6 +47,7 @@ const calendar = new VanillaCalendar('#datepicker', {
        },
        visibility: {
         theme: theme,
+        weekNumbers: enableWeekNum,
        },
        selection: {
         time: timeFmt,
