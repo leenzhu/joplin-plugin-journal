@@ -67,7 +67,20 @@ async function makeNoteName(d) {
 	}
 
 	console.log(`Jouranl tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
-	let data = { year: '', month: '', monthName: '', day: '', hour: '', min: '', sec: '', weekday: '', weekdayName: '', weekNum:'' };
+	let data = {
+		year: '',
+		month: '',
+		monthName: '',
+		day: '',
+		hour: '',
+		min: '',
+		sec: '',
+		weekday: '',
+		weekdayName: '',
+		weekNum:'',
+		ampm:'',
+		hour12:'',
+	};
 	data.year = '' + year; // convert number to string
 	switch (monthStyle) {
 		case 'pad_num':
@@ -123,7 +136,9 @@ async function makeNoteName(d) {
 	data.hour = padding(hour);
 	data.min = padding(min);
 	data.sec = padding(sec);
-
+	data.ampm = hour >= 12 ? "PM" : "AM";
+	const hour12 = hour % 12
+	data.hour12 = padding(hour12 ? hour12 : 12)
 	console.log(`Journal tmpl data: `, data);
 	const noteName = tplEngin(noteTmpl, data);
 
@@ -227,7 +242,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
