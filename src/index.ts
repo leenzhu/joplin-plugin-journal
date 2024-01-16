@@ -222,7 +222,7 @@ joplin.plugins.register({
 				const date_time = `${ret.formData.picker.date}T${ret.formData.picker.time}:00`
 				console.log("Journal: picker date_time: ", date_time);
 				const d = new Date(date_time);
-				console.log("Jouranl: picker date Object: ", d);
+				console.log("Journal: picker date Object: ", d);
 				return d;
 			} else {
 				return null;
@@ -328,7 +328,7 @@ joplin.plugins.register({
 				isEnum: true,
 				public: true,
 				advanced: true,
-				label: 'Time Selection Fromat',
+				label: 'Time Selection Format',
 				options: {
 					0: 'Disable',
 					12: '12 Hours Format',
