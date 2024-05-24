@@ -27,10 +27,10 @@ function tplEngin(tpl, data) {
 	while (match = re.exec(tpl)) {
 		let v = data[match[1]];
 		if (typeof (v) === "string") {
-			v.replace(/{/g,"<");
+			v.replace(/{/g, "<");
 			v.replace(/}/g, ">"); // trim marker, prevent deadloop if 'v' contains '{{...}}'
 		}
-		tpl = tpl.replace(match[0],  v ? v : `errkey_${match[1]}`);
+		tpl = tpl.replace(match[0], v ? v : `errkey_${match[1]}`);
 	}
 
 	return tpl;
@@ -77,9 +77,9 @@ async function makeNoteName(d) {
 		sec: '',
 		weekday: '',
 		weekdayName: '',
-		weekNum:'',
-		ampm:'',
-		hour12:'',
+		weekNum: '',
+		ampm: '',
+		hour12: '',
 	};
 	data.year = '' + year; // convert number to string
 	switch (monthStyle) {
@@ -242,7 +242,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default vaule is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default value is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
@@ -265,7 +265,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Month Name',
-				description: "Custom {{monthName}}, each value is divided by ','.",
+				description: "Custom {{monthName}}, each value is separated by ','.",
 			},
 			'DayStyle': {
 				value: 'pad_num',
@@ -300,7 +300,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Weekday Name',
-				description: "Custom {{weekdayName}}, each value is divided by ','. First weekday is 'Sunday'.",
+				description: "Custom {{weekdayName}}, each value is separated by ','. First weekday is 'Sunday'.",
 			},
 			'iso8601': {
 				value: true,
@@ -328,13 +328,13 @@ joplin.plugins.register({
 				isEnum: true,
 				public: true,
 				advanced: true,
-				label: 'Time Selection Format',
+				label: 'Time Format',
 				options: {
 					0: 'Disable',
 					12: '12 Hours Format',
 					24: '24 Hours Format'
 				},
-				description: "Enable time selection",
+				description: "Select preferred format for time.",
 			},
 			'Theme': {
 				value: "light",
@@ -348,7 +348,7 @@ joplin.plugins.register({
 					"light": 'Light',
 					"dark": 'Dark',
 				},
-				description: "Change the theme of calendar",
+				description: "Choose the theme of the calendar.",
 			},
 			'WeekNum': {
 				value: false,
@@ -357,7 +357,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Enable week numbers',
-				description: "Show week numbers in calendar",
+				description: "Show week numbers in calendar.",
 			},
 			'WeekNumStyle': {
 				value: 'pad_num',
@@ -424,23 +424,23 @@ joplin.plugins.register({
 			}
 		});
 
-                await joplin.commands.register({
-                        name: "linkTodayNoteWithLabel",
-                        label: "Insert link to Today's Note with label 'Today'",
-                        execute: async () => {
-                                const d = new Date();
-                                const note = await createNoteByDate(d);
-                                await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
-                                await joplin.commands.execute('editor.focus');
-                        }
-                });
+		await joplin.commands.register({
+			name: "linkTodayNoteWithLabel",
+			label: "Insert link to Today's Note with label 'Today'",
+			execute: async () => {
+				const d = new Date();
+				const note = await createNoteByDate(d);
+				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
+				await joplin.commands.execute('editor.focus');
+			}
+		});
 
 
 		await joplin.views.menus.create('journal-menu', 'Journal', [
 			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
 			{ label: "Open Another day's Note", commandName: "openOtherdayNote", accelerator: "CmdOrCtrl+Alt+O" },
 			{ label: "Insert link to Today's Note", commandName: "linkTodayNote", accelerator: "CmdOrCtrl+Alt+L" },
-                        { label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
+			{ label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
 			{ label: "Insert link to Another day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 		]);
 
