@@ -4,6 +4,7 @@ import { SettingItemType } from 'api/types';
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
 const defaultWeekdayName = 'Sun,Mon,Tue,Wed,Thu,Fri,Sat';
+const defaultTagName = 'journal'
 
 function getWeek(d) {
 	var date = new Date(d.getTime());
@@ -184,10 +185,40 @@ async function createNote(notePath) {
 	return note;
 }
 
+async function addNoteTags(noteId) {
+	const enableAutoTag = await joplin.settings.value('AutoTag') || false;
+	if (!enableAutoTag) {
+		return;
+	}
+
+	const tagName = await joplin.settings.value('Tags') || defaultTagName;
+	const tagNames = tagName.split(",")
+
+	for (let i = 0; i < tagNames.length; i++) {
+		const tagTitle = tagNames[i].trim();
+		let tagId = "";
+		const tagFound = await joplin.data.get(["search"], { query: tagTitle, type: "tag", fields:"id, title"});
+		if (tagFound.items.length == 0) {
+			console.log("TagName:", tagTitle, "Not found");
+			const newTag = await joplin.data.post(["tags"], null, {title: tagTitle});
+			console.log("CrateTagName:", tagTitle, newTag);
+			tagId = newTag.id;
+		}else {
+			tagId = tagFound.items[0].id;
+		}
+
+		console.log("TagName:", tagTitle, tagId);
+		await joplin.data.post(['tags', tagId, 'notes'], null, {
+		 	id: noteId
+		});
+	}
+}
+
 async function createNoteByDate(d) {
 	let noteName = await makeNoteName(d);
 	console.log("Make noteName: ", noteName);
 	let note = await createNote(noteName);
+	await addNoteTags(note.id);
 	return note;
 }
 
@@ -373,7 +404,24 @@ joplin.plugins.register({
 				},
 				description: "Padding number: 01, 02, ..., 06, 07, Number: 1, 2, ..., 6, 7."
 			},
-
+			'AutoTag': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Enable AutoTag',
+				description: "Auto add tag(s) when create new  journal notes",
+			},
+			'Tags': {
+				value: defaultTagName,
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Tag Names',
+				description: "Custom tag names, each value is separated by ','. eg",
+			},
 		});
 
 		await joplin.commands.register({

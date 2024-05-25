@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3 (2023-10-06)
+1. **FIX** Settings: typo fix and label improvements. Thanks @andypiper
+2. **FEAT** #25 Feature Request: Add tags automatically to new journal notes
+
 ## v1.1.1 (2023-10-06)
 
 1. support weeknum
