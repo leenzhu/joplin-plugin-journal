@@ -222,7 +222,6 @@ async function createNoteByDate(d) {
 	return note;
 }
 
-
 joplin.plugins.register({
 	onStart: async function () {
 		console.info('joplin-plugin-journal started!');
@@ -244,7 +243,38 @@ joplin.plugins.register({
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
 
-			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			// Iterate over year of dates
+			let now = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
+			let start = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
+			start.setDate(start.getDate() - 365)
+			let daysWithNotes = []
+			for (var d = start; d <= now; d.setDate(d.getDate() + 1)) {
+				// Get the name of a note for this day
+				let noteName = await makeNoteName(d);
+				let parts = noteName.split("/")
+
+				// Look for a note with that name
+				const paths = parts.slice(0, -1)
+				const noteTitle = parts[parts.length - 1]
+				async function traverse(parent_id, depth){
+					if(depth == -1){
+						return true
+					}
+					let folder = await joplin.data.get(['folders', parent_id]);
+					if(folder.title == paths[depth]){
+						return await traverse(folder.parent_id, depth-1)
+					}
+					return false
+				}
+				let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note" })
+				for(const note of notes.items){
+					if(await traverse(note.parent_id, paths.length - 1)){
+						daysWithNotes.push(d.toISOString().substring(0, 10))
+					}
+				}
+			}
+
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"><div <div id="days_with_notes" ${daysWithNotes.join("=true ") + "=true"}></div></form>`);
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {

@@ -25,6 +25,8 @@ const monday_first = date_ele.getAttribute('iso8601') === 'true'
 const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
 const theme:any = date_ele.getAttribute('theme')
 const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
+const days_with_notes_ele = document.getElementById('days_with_notes')
+
 const calendar = new VanillaCalendar('#datepicker', {
     actions: {
        clickDay(e, dates) {
@@ -38,6 +40,11 @@ const calendar = new VanillaCalendar('#datepicker', {
             console.log(`Vanilla Calendar: time: ${time}`)
             console.log(`Vanilla Calendar: hour: ${hours} minutes: ${minutes}`)
             console.log(`Vanilla Calendar: keeping: ${keeping}`)
+       },
+       getDays(day, date, HTMLElement, HTMLButtonElement) {
+            if(days_with_notes_ele.getAttribute(date)){
+                HTMLButtonElement.style["border"] = "1px solid rgb(112, 112, 255)"
+            }
        },
     },
     settings: {
