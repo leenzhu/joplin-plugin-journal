@@ -237,16 +237,12 @@ joplin.plugins.register({
 			{ id: "cancel", title: "Cancel" },
 		]);
 
-		async function getDateByDialog() {
-			const iso8601 = await joplin.settings.value('iso8601');
-			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
-			const theme = await joplin.settings.value('Theme') || "light"
-			const enableWeekNum = await joplin.settings.value('WeekNum') || false
-
+		async function getDatesWithNotes() {
 			// Iterate over year of dates
 			let now = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
 			let start = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
 			start.setDate(start.getDate() - 365)
+
 			let daysWithNotes = []
 			for (var d = start; d <= now; d.setDate(d.getDate() + 1)) {
 				// Get the name of a note for this day
@@ -273,6 +269,21 @@ joplin.plugins.register({
 					}
 				}
 			}
+			return daysWithNotes
+		}
+
+		let daysWithNotes = []
+		setTimeout(async () => { // Update cached list every 10 minutes
+			daysWithNotes = await getDatesWithNotes()
+		}, 5000);
+		setInterval(async () => { // Update cached list every 10 minutes
+			daysWithNotes = await getDatesWithNotes()
+		}, 60 * 10 * 1000);
+		async function getDateByDialog() {
+			const iso8601 = await joplin.settings.value('iso8601');
+			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
+			const theme = await joplin.settings.value('Theme') || "light"
+			const enableWeekNum = await joplin.settings.value('WeekNum') || false
 
 			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"><div <div id="days_with_notes" ${daysWithNotes.join("=true ") + "=true"}></div></form>`);
 			const ret = await dialogs.open(dialog);
