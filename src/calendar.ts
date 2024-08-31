@@ -26,6 +26,7 @@ const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
 const theme:any = date_ele.getAttribute('theme')
 const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
 const days_with_notes_ele = document.getElementById('days_with_notes')
+const calendarHighlightColor = days_with_notes_ele.getAttribute('calendarHighlightColor')
 
 const calendar = new VanillaCalendar('#datepicker', {
     actions: {
@@ -43,7 +44,8 @@ const calendar = new VanillaCalendar('#datepicker', {
        },
        getDays(day, date, HTMLElement, HTMLButtonElement) {
             if(days_with_notes_ele.getAttribute(date)){
-                HTMLButtonElement.style["border"] = "1px solid rgb(112, 112, 255)"
+                HTMLButtonElement.style["border"] = `1px solid ${calendarHighlightColor}`
+                HTMLButtonElement.style["margin"] = "1px"
             }
        },
     },

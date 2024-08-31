@@ -1,5 +1,6 @@
 import joplin from 'api';
 import { SettingItemType } from 'api/types';
+import { clearInterval } from 'timers';
 
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
@@ -273,19 +274,37 @@ joplin.plugins.register({
 		}
 
 		let daysWithNotes = []
-		setTimeout(async () => { // Update cached list every 10 minutes
-			daysWithNotes = await getDatesWithNotes()
-		}, 5000);
-		setInterval(async () => { // Update cached list every 10 minutes
-			daysWithNotes = await getDatesWithNotes()
-		}, 60 * 10 * 1000);
+		let highlightInterval = undefined
+		async function updateCalendarInterval(){
+			if(await joplin.settings.value("HighlightCalendar")){
+				if(!highlightInterval){
+					// Run now to get initial data
+					setTimeout(async () => {
+						daysWithNotes = await getDatesWithNotes()
+					}, 2000);
+
+					let intervalMinutes = await joplin.settings.value("HighlightCalendarInterval") || 10;
+					highlightInterval = setInterval(async () => { // Update cached list every 10 minutes
+						daysWithNotes = await getDatesWithNotes()
+					}, 60 * 1000 * intervalMinutes);
+				}
+			} else if(highlightInterval) {
+				clearInterval(highlightInterval)
+				highlightInterval = undefined
+				daysWithNotes = []
+			}
+		}
+
 		async function getDateByDialog() {
 			const iso8601 = await joplin.settings.value('iso8601');
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
-
-			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"><div <div id="days_with_notes" ${daysWithNotes.join("=true ") + "=true"}></div></form>`);
+			const calendarHighlightColor = await joplin.settings.value('HighlightCalendarColor')
+			updateCalendarInterval() // Check settings on calendar
+			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
+			let calendarHighlightHtml = `<div id="days_with_notes" calendarHighlightColor=${calendarHighlightColor} ${enableCalendarHighlight ? daysWithNotes.map(el=> el+"=true").join(" ") : ""}></div>`
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden">${calendarHighlightHtml}</form>`);
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {
@@ -463,6 +482,33 @@ joplin.plugins.register({
 				label: 'Tag Names',
 				description: "Custom tag names, each value is separated by ','. eg",
 			},
+			'HighlightCalendar': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Enable Calendar Highlights',
+				description: "Highlight days with notes on the calendar",
+			},
+			'HighlightCalendarInterval': {
+				value: 10,
+				type: SettingItemType.Int,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Calendar Update Period',
+				description: "How often in minutes to update calendar highlights",
+			},
+			'HighlightCalendarColor': {
+				value: "#7070ff",
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Calendar Highlight Color',
+				description: "CSS color of calendar highlight",
+			},
 		});
 
 		await joplin.commands.register({
@@ -539,5 +585,7 @@ joplin.plugins.register({
 				await joplin.commands.execute('openTodayNote');
 			}, 2000);
 		}
+
+		updateCalendarInterval() // Check the calendar highlight settings
 	},
 });
