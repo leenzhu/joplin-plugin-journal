@@ -1,6 +1,5 @@
 import joplin from 'api';
 import { SettingItemType } from 'api/types';
-import { clearInterval } from 'timers';
 
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
@@ -223,6 +222,7 @@ async function createNoteByDate(d) {
 	return note;
 }
 
+
 joplin.plugins.register({
 	onStart: async function () {
 		console.info('joplin-plugin-journal started!');
@@ -238,73 +238,43 @@ joplin.plugins.register({
 			{ id: "cancel", title: "Cancel" },
 		]);
 
-		async function getDatesWithNotes() {
-			// Iterate over year of dates
-			let now = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
-			let start = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60*1000)
-			start.setDate(start.getDate() - 365)
-
-			let daysWithNotes = []
-			for (var d = start; d <= now; d.setDate(d.getDate() + 1)) {
-				// Get the name of a note for this day
-				let noteName = await makeNoteName(d);
-				let parts = noteName.split("/")
-
-				// Look for a note with that name
-				const paths = parts.slice(0, -1)
-				const noteTitle = parts[parts.length - 1]
-				async function traverse(parent_id, depth){
-					if(depth == -1){
-						return true
-					}
-					let folder = await joplin.data.get(['folders', parent_id]);
-					if(folder.title == paths[depth]){
-						return await traverse(folder.parent_id, depth-1)
-					}
-					return false
-				}
-				let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note" })
-				for(const note of notes.items){
-					if(await traverse(note.parent_id, paths.length - 1)){
-						daysWithNotes.push(d.toISOString().substring(0, 10))
-					}
-				}
-			}
-			return daysWithNotes
-		}
-
-		let daysWithNotes = []
-		let highlightInterval = undefined
-		async function updateCalendarInterval(){
-			if(await joplin.settings.value("HighlightCalendar")){
-				if(!highlightInterval){
-					// Run now to get initial data
-					setTimeout(async () => {
-						daysWithNotes = await getDatesWithNotes()
-					}, 2000);
-
-					let intervalMinutes = await joplin.settings.value("HighlightCalendarInterval") || 10;
-					highlightInterval = setInterval(async () => { // Update cached list every 10 minutes
-						daysWithNotes = await getDatesWithNotes()
-					}, 60 * 1000 * intervalMinutes);
-				}
-			} else if(highlightInterval) {
-				clearInterval(highlightInterval)
-				highlightInterval = undefined
-				daysWithNotes = []
-			}
-		}
-
 		async function getDateByDialog() {
 			const iso8601 = await joplin.settings.value('iso8601');
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
 			const calendarHighlightColor = await joplin.settings.value('HighlightCalendarColor')
-			updateCalendarInterval() // Check settings on calendar
 			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
-			let calendarHighlightHtml = `<div id="days_with_notes" calendarHighlightColor=${calendarHighlightColor} ${enableCalendarHighlight ? daysWithNotes.map(el=> el+"=true").join(" ") : ""}></div>`
-			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden">${calendarHighlightHtml}</form>`);
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} calendarHighlightColor=${calendarHighlightColor} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			joplin.views.panels.onMessage(dialog, async (msg) => {
+				if(msg.type == "noteExists"){
+					// Convert the date to local time
+					const d = new Date(new Date(msg.date).getTime() + new Date().getTimezoneOffset()*60*1000)
+					let noteName = await makeNoteName(d);
+					let parts = noteName.split("/")
+
+					// Look for a note with that name
+					const paths = parts.slice(0, -1)
+					const noteTitle = parts[parts.length - 1]
+					async function traverse(parent_id, depth){
+						if(depth == -1){
+							return true
+						}
+						let folder = await joplin.data.get(['folders', parent_id]);
+						if(folder.title == paths[depth]){
+							return await traverse(folder.parent_id, depth-1)
+						}
+						return false
+					}
+					let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note" })
+					for(const note of notes.items){
+						if(await traverse(note.parent_id, paths.length - 1)){
+							return true
+						}
+					}
+					return false
+				}
+			 });
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {
@@ -491,15 +461,6 @@ joplin.plugins.register({
 				label: 'Enable Calendar Highlights',
 				description: "Highlight days with notes on the calendar",
 			},
-			'HighlightCalendarInterval': {
-				value: 10,
-				type: SettingItemType.Int,
-				section: 'Journal',
-				public: true,
-				advanced: true,
-				label: 'Calendar Update Period',
-				description: "How often in minutes to update calendar highlights",
-			},
 			'HighlightCalendarColor': {
 				value: "#7070ff",
 				type: SettingItemType.String,
@@ -585,7 +546,5 @@ joplin.plugins.register({
 				await joplin.commands.execute('openTodayNote');
 			}, 2000);
 		}
-
-		updateCalendarInterval() // Check the calendar highlight settings
 	},
 });
