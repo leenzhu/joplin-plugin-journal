@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.0 (2024-09-03)
+1. **FEAT** #27 Feature Request: ability to see what notes have entries Thanks @Mark-Powers
+    This feature is dissabled by default, you need to enable it from the journal setting.
+
 ## v1.1.3 (2023-10-06)
 1. **FIX** Settings: typo fix and label improvements. Thanks @andypiper
 2. **FEAT** #25 Feature Request: Add tags automatically to new journal notes
