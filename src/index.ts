@@ -232,6 +232,7 @@ joplin.plugins.register({
 		await dialogs.addScript(dialog, "./vanilla-calendar.min.css");
 		await dialogs.addScript(dialog, "./light.min.css");
 		await dialogs.addScript(dialog, "./dark.min.css");
+		await dialogs.addScript(dialog, "vnilla-calendar-ext.css");
 		await dialogs.addScript(dialog, "./calendar.js");
 		await dialogs.setButtons(dialog, [
 			{ id: "ok", title: "OK" },
@@ -243,8 +244,37 @@ joplin.plugins.register({
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
+			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			joplin.views.panels.onMessage(dialog, async (msg) => {
+				if(msg.type == "noteExists"){
+					// Convert the date to local time
+					const d = new Date(new Date(msg.date).getTime() + new Date().getTimezoneOffset()*60*1000)
+					let noteName = await makeNoteName(d);
+					let parts = noteName.split("/")
 
-			await dialogs.setHtml(dialog, `<form name="picker" ><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+					// Look for a note with that name
+					const paths = parts.slice(0, -1)
+					const noteTitle = parts[parts.length - 1]
+					async function traverse(parent_id, depth){
+						if(depth == -1){
+							return true
+						}
+						let folder = await joplin.data.get(['folders', parent_id]);
+						if(folder.title == paths[depth]){
+							return await traverse(folder.parent_id, depth-1)
+						}
+						return false
+					}
+					let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note" })
+					for(const note of notes.items){
+						if(await traverse(note.parent_id, paths.length - 1)){
+							return true
+						}
+					}
+					return false
+				}
+			 });
 			const ret = await dialogs.open(dialog);
 
 			if (ret.id == "ok") {
@@ -421,6 +451,15 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Tag Names',
 				description: "Custom tag names, each value is separated by ','. eg",
+			},
+			'HighlightCalendar': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Enable Calendar Highlights',
+				description: "Highlight days with notes on the calendar",
 			},
 		});
 
