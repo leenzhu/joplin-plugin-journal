@@ -232,6 +232,7 @@ joplin.plugins.register({
 		await dialogs.addScript(dialog, "./vanilla-calendar.min.css");
 		await dialogs.addScript(dialog, "./light.min.css");
 		await dialogs.addScript(dialog, "./dark.min.css");
+		await dialogs.addScript(dialog, "vnilla-calendar-ext.css");
 		await dialogs.addScript(dialog, "./calendar.js");
 		await dialogs.setButtons(dialog, [
 			{ id: "ok", title: "OK" },
@@ -243,9 +244,8 @@ joplin.plugins.register({
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
-			const calendarHighlightColor = await joplin.settings.value('HighlightCalendarColor')
 			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
-			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} calendarHighlightColor=${calendarHighlightColor} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
 			joplin.views.panels.onMessage(dialog, async (msg) => {
 				if(msg.type == "noteExists"){
 					// Convert the date to local time
@@ -460,15 +460,6 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Enable Calendar Highlights',
 				description: "Highlight days with notes on the calendar",
-			},
-			'HighlightCalendarColor': {
-				value: "#7070ff",
-				type: SettingItemType.String,
-				section: 'Journal',
-				public: true,
-				advanced: true,
-				label: 'Calendar Highlight Color',
-				description: "CSS color of calendar highlight",
 			},
 		});
 

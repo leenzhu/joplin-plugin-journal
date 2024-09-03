@@ -27,7 +27,6 @@ const monday_first = date_ele.getAttribute('iso8601') === 'true'
 const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
 const theme:any = date_ele.getAttribute('theme')
 const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
-const calendarHighlightColor = date_ele.getAttribute('calendarHighlightColor')
 const enableCalendarHighlight = date_ele.getAttribute('enableCalendarHighlight') === "true"
 
 const calendar = new VanillaCalendar('#datepicker', {
@@ -48,8 +47,7 @@ const calendar = new VanillaCalendar('#datepicker', {
             if(enableCalendarHighlight){
                 webviewApi.postMessage({"type": "noteExists", "date": date}).then(res => {
                     if(res){
-                        HTMLButtonElement.style["border"] = `1px solid ${calendarHighlightColor}`
-                        HTMLButtonElement.style["margin"] = "1px"
+                        HTMLButtonElement.classList.add("vanilla-calendar-day_noted");
                     }
                 })
             }

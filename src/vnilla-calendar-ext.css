@@ -1,0 +1,9 @@
+.vanilla-calendar-day_noted::after {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: gray;
+}
