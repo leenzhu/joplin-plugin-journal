@@ -397,6 +397,17 @@ joplin.plugins.register({
 				},
 				description: "Select preferred format for time.",
 			},
+			'DayStart': {
+				value: 0,
+				type: SettingItemType.Int,
+				section: 'Journal',
+				minimum: -6,
+				maximum: 6,
+				public: true,
+				advanced: true,
+				label: 'Day start',
+				description: "Select how many hours before or after midnight your day should start.",
+			},
 			'Theme': {
 				value: "light",
 				type: SettingItemType.String,
