@@ -239,6 +239,13 @@ joplin.plugins.register({
 			{ id: "cancel", title: "Cancel" },
 		]);
 
+		async function getDateWithOffset() {
+			const offset = await joplin.settings.value('DayStart')
+			let d = new Date(new Date().getTime() - 1000*60*60*offset);
+			console.log("Journal Date with Offset: ", d)
+			return d;
+		}
+
 		async function getDateByDialog() {
 			const iso8601 = await joplin.settings.value('iso8601');
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
@@ -478,7 +485,7 @@ joplin.plugins.register({
 			name: "openTodayNote",
 			label: "Open Today's Note",
 			execute: async () => {
-				const d = new Date();
+				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
@@ -502,7 +509,7 @@ joplin.plugins.register({
 			name: "linkTodayNote",
 			label: "Insert link to Today's Note",
 			execute: async () => {
-				const d = new Date();
+				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
@@ -526,7 +533,7 @@ joplin.plugins.register({
 			name: "linkTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today'",
 			execute: async () => {
-				const d = new Date();
+				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
