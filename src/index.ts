@@ -485,6 +485,17 @@ joplin.plugins.register({
 			name: "openTodayNote",
 			label: "Open Today's Note",
 			execute: async () => {
+				const d = new Date();
+				const note = await createNoteByDate(d);
+				await joplin.commands.execute("openNote", note.id);
+				await joplin.commands.execute('editor.focus');
+			}
+		});
+
+		await joplin.commands.register({
+			name: "openOffsetTodayNote",
+			label: "Open Today's Note (with Offset)",
+			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("openNote", note.id);
@@ -508,6 +519,17 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkTodayNote",
 			label: "Insert link to Today's Note",
+			execute: async () => {
+				const d = new Date();
+				const note = await createNoteByDate(d);
+				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
+				await joplin.commands.execute('editor.focus');
+			}
+		});
+
+		await joplin.commands.register({
+			name: "linkOffsetTodayNote",
+			label: "Insert link to Today's Note (with Offset)",
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
@@ -533,6 +555,17 @@ joplin.plugins.register({
 			name: "linkTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today'",
 			execute: async () => {
+				const d = new Date();
+				const note = await createNoteByDate(d);
+				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
+				await joplin.commands.execute('editor.focus');
+			}
+		});
+
+		await joplin.commands.register({
+			name: "linkOffsetTodayNoteWithLabel",
+			label: "Insert link to Today's Note with label 'Today' (with Offset) ",
+			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
@@ -543,9 +576,12 @@ joplin.plugins.register({
 
 		await joplin.views.menus.create('journal-menu', 'Journal', [
 			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
+			{ label: "Open Today's Note (with Offset)", commandName: "openOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+D" },
 			{ label: "Open Another day's Note", commandName: "openOtherdayNote", accelerator: "CmdOrCtrl+Alt+O" },
 			{ label: "Insert link to Today's Note", commandName: "linkTodayNote", accelerator: "CmdOrCtrl+Alt+L" },
+			{ label: "Insert link to Today's Note (with Offset)", commandName: "linkOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+L" },
 			{ label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
+			{ label: "Insert link to Today's Note with Label (with Offset)", commandName: "linkOffsetTodayNoteWithLabel", accelerator: "CmdOrCtrl+Shift+Alt+I" },
 			{ label: "Insert link to Another day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 		]);
 
