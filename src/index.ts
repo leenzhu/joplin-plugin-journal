@@ -361,6 +361,16 @@ joplin.plugins.register({
 				},
 				description: "Padding number: 01, 02, ..., 06, 07, Number: 1, 2, ..., 6, 7."
 			},
+			'Offset': {
+				value: 0,
+				type: SettingItemType.Int,
+				section: 'Journal',
+				minimum: -6,
+				maximum: 6,
+				public: true,
+				label: 'Offset for end of Today',
+				description: "Select how many hours before or after midnight your day should end. Affects behavior for commands with Offset. Helpful if you often create notes for the day before after midnight.",
+			},
 			'WeekdayName': {
 				value: defaultWeekdayName,
 				type: SettingItemType.String,
@@ -403,17 +413,6 @@ joplin.plugins.register({
 					24: '24 Hours Format'
 				},
 				description: "Select preferred format for time.",
-			},
-			'DayStart': {
-				value: 0,
-				type: SettingItemType.Int,
-				section: 'Journal',
-				minimum: -6,
-				maximum: 6,
-				public: true,
-				advanced: true,
-				label: 'Day start',
-				description: "Select how many hours before or after midnight your day should start.",
 			},
 			'Theme': {
 				value: "light",
