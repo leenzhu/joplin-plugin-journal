@@ -240,9 +240,9 @@ joplin.plugins.register({
 		]);
 
 		async function getDateWithOffset() {
-			const offset = await joplin.settings.value('DayStart')
+			const offset = await joplin.settings.value('Offset');
 			let d = new Date(new Date().getTime() - 1000*60*60*offset);
-			console.log("Journal Date with Offset: ", d)
+			console.log("Journal: get date with Offset: ", d);
 			return d;
 		}
 
