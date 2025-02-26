@@ -9,7 +9,15 @@ function padding(v) {
     return ('0' + v).slice(-2)
 }
 
-const d = new Date()
+const date_ele = document.getElementById('datepicker')
+const monday_first = date_ele.getAttribute('iso8601') === 'true'
+const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
+const theme:any = date_ele.getAttribute('theme')
+const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
+const enableCalendarHighlight = date_ele.getAttribute('enableCalendarHighlight') === "true"
+const calendarOffset = parseInt(date_ele.getAttribute('calendarOffset')) || 0
+
+const d = new Date(new Date().getTime() - 1000 * 60 * 60 * calendarOffset);
 const year = d.getFullYear()
 const month = d.getMonth() + 1
 const day = d.getDate()
@@ -22,12 +30,6 @@ const date_input = document.querySelector("#j_date") as HTMLInputElement
 const time_input = document.querySelector("#j_time") as HTMLInputElement
 date_input.value = today
 time_input.value = now
-const date_ele = document.getElementById('datepicker')
-const monday_first = date_ele.getAttribute('iso8601') === 'true'
-const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
-const theme:any = date_ele.getAttribute('theme')
-const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
-const enableCalendarHighlight = date_ele.getAttribute('enableCalendarHighlight') === "true"
 
 const calendar = new VanillaCalendar('#datepicker', {
     actions: {
