@@ -252,9 +252,7 @@ joplin.plugins.register({
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
 			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
-			const applyOffset = await joplin.settings.value("CalendarOffset");
-			const calendarOffset = applyOffset ? await joplin.settings.value("Offset") : 0;
-			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCalendarHighlight=${enableCalendarHighlight} calendarOffset=${calendarOffset}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
 			joplin.views.panels.onMessage(dialog, async (msg) => {
 				if(msg.type == "noteExists"){
 					// Convert the date to local time
@@ -480,15 +478,6 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Enable Calendar Highlights',
 				description: "Highlight days with notes on the calendar",
-			},
-			'CalendarOffset': {
-				value: false,
-				type: SettingItemType.Bool,
-				section: 'Journal',
-				public: true,
-				advanced: true,
-				label: 'Apply offset to calendar',
-				description: "Highlight 'today' in calendar with an offset",
 			},
 		});
 
