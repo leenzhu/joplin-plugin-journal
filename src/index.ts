@@ -370,6 +370,7 @@ joplin.plugins.register({
 				minimum: -6,
 				maximum: 6,
 				public: true,
+				advanced: true,
 				label: 'Offset for end of Today',
 				description: "Select how many hours before or after midnight your day should end. Affects behavior for commands with Offset. Helpful if you often create notes for the day before after midnight.",
 			},
