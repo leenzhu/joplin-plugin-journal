@@ -4,6 +4,7 @@ import { SettingItemType } from 'api/types';
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
 const defaultWeekdayName = 'Sun,Mon,Tue,Wed,Thu,Fri,Sat';
+const defaultQuarterName = 'Q1,Q2,Q3,Q4';
 const defaultTagName = 'journal'
 
 function getWeek(d) {
@@ -46,6 +47,7 @@ async function makeNoteName(d) {
 	const sec = d.getSeconds();
 	const weekday = d.getDay();
 	const weekNum = getWeek(d)
+	const quarter = Math.floor((month - 1) / 3) + 1;
 
 	const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
 
@@ -55,6 +57,7 @@ async function makeNoteName(d) {
 
 	const monthName = await joplin.settings.value('MonthName') || defaultMonthName;
 	const weekdayName = await joplin.settings.value('WeekdayName') || defaultWeekdayName;
+	const quarterName = await joplin.settings.value('QuarterName') || defaultQuarterName;
 
 	const weekNumStyle = await joplin.settings.value('WeekNumStyle') || 'pad_num';
 	let monthNames = monthName.split(',');
@@ -66,6 +69,11 @@ async function makeNoteName(d) {
 	if (weekdayNames.length != 7) {
 		weekdayNames = defaultWeekdayName.split(',');
 	}
+
+	let quarterNames = quarterName.split(',');
+	if (quarterNames.length != 4) {
+		quarterNames = defaultQuarterName.split(',');
+    }
 
 	console.log(`Jouranl tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
 	let data = {
@@ -81,6 +89,8 @@ async function makeNoteName(d) {
 		weekNum: '',
 		ampm: '',
 		hour12: '',
+		quarter: '',
+		quarterName: '',
 	};
 	data.year = '' + year; // convert number to string
 	switch (monthStyle) {
@@ -140,6 +150,8 @@ async function makeNoteName(d) {
 	data.ampm = hour >= 12 ? "PM" : "AM";
 	const hour12 = hour % 12
 	data.hour12 = padding(hour12 ? hour12 : 12)
+	data.quarter = `${quarter}`;
+	data.quarterName = quarterNames[quarter-1];
 	console.log(`Journal tmpl data: `, data);
 	const noteName = tplEngin(noteTmpl, data);
 
@@ -310,7 +322,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default value is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{month}}, {{monthName}}, {{quarter}}, {{quarterName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default value is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
@@ -381,6 +393,16 @@ joplin.plugins.register({
 				label: 'Weekday Name',
 				description: "Custom {{weekdayName}}, each value is separated by ','. First weekday is 'Sunday'.",
 			},
+			'QuarterName': {
+				value: defaultQuarterName,
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Quarter Name',
+				description: "Custom {{quarterName}}, each value is separated by ','",
+			},
+
 			'iso8601': {
 				value: true,
 				type: SettingItemType.Bool,
