@@ -1,6 +1,12 @@
 # Changelog
 
+## v1.3.0 (2025-03-07)
+
+1. FEAT #32 PR: Add option to shift the start hour of the day. Thanks @Meisenburger13
+2. FEAT #33 Feature request: Add quarter as a variable
+
 ## v1.2.0 (2024-09-03)
+
 1. **FEAT** #27 Feature Request: ability to see what notes have entries Thanks @Mark-Powers
     This feature is dissabled by default, you need to enable it from the journal setting.
 
