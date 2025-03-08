@@ -1,5 +1,5 @@
 import joplin from 'api';
-import { SettingItemType } from 'api/types';
+import { SettingItemType, ToolbarButtonLocation } from 'api/types';
 
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
@@ -585,6 +585,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkTodayNote",
 			label: "Insert link to Today's Note",
+			iconName: "fas fa-calendar-times",
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
@@ -607,6 +608,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkOtherDayNote",
 			label: "Insert link to Another day's Note",
+			iconName: "fas fa-calendar-alt",
 			execute: async () => {
 				let d = await getDateByDialog();
 				if (d !== null) {
@@ -657,5 +659,40 @@ joplin.plugins.register({
 				await joplin.commands.execute('openTodayNote');
 			}, 2000);
 		}
+
+		const isMobilePlatform = await isMobile();
+		if (isMobilePlatform) {
+			console.log({isMobilePlatform})
+			await joplin.views.toolbarButtons.create(
+				"openTodayNoteMobile",
+				"openTodayNote",
+				ToolbarButtonLocation.NoteToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"openOtherdayNoteMobile",
+				"openOtherdayNote",
+				ToolbarButtonLocation.NoteToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkTodayNoteMobile",
+				"linkTodayNote",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkOtherDayNoteMobile",
+				"linkOtherDayNote",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+		}
 	},
 });
+
+const isMobile = async () => {
+	try {
+		const version = await joplin.versionInfo() as any;
+		return version?.platform === 'mobile';
+	} catch(error) {
+		console.warn('Error checking whether the device is a mobile device. Assuming desktop.', error);
+		return false;
+	}
+};

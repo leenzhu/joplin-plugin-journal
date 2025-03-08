@@ -10,5 +10,9 @@
 	"repository_url": "https://github.com/leenzhu/joplin-plugin-journal",
 	"keywords": [
 		"joplin-plugin"
+	],
+	"platforms": [
+		"desktop",
+		"mobile"
 	]
 }
