@@ -663,16 +663,60 @@ joplin.plugins.register({
 		const isMobilePlatform = await isMobile();
 		if (isMobilePlatform) {
 			console.log({isMobilePlatform})
-			await joplin.views.toolbarButtons.create(
-				"openTodayNoteMobile",
-				"openTodayNote",
-				ToolbarButtonLocation.NoteToolbar
-		  	);
-			await joplin.views.toolbarButtons.create(
-				"openOtherdayNoteMobile",
-				"openOtherdayNote",
-				ToolbarButtonLocation.NoteToolbar
-		  	);
+			await joplin.settings.registerSettings({
+				'openTodayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Today\'s Note option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+				'openOffsetTodayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Today\'s Note (with Offset) option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+				'openOtherdayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Another day\'s Note option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+			});
+			const openTodayNoteSetting = await joplin.settings.value('openTodayNoteSetting') || false;
+			const openOffsetTodayNoteSetting = await joplin.settings.value('openOffsetTodayNoteSetting') || false;
+			const openOtherdayNoteSetting = await joplin.settings.value('openOtherdayNoteSetting') || false;
+			if (openTodayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openTodayNoteMobile",
+					"openTodayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+			if (openOffsetTodayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openOffsetTodayNoteMobile",
+					"openOffsetTodayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+			if (openOtherdayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openOtherdayNoteMobile",
+					"openOtherdayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+
 			await joplin.views.toolbarButtons.create(
 				"linkTodayNoteMobile",
 				"linkTodayNote",
