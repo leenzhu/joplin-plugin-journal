@@ -185,6 +185,9 @@ async function createNote(notePath) {
 	}
 
 	let notes = await joplin.data.get(["search"], { query: `/"${noteName}"`, type: "note" });
+	let body = await joplin.settings.value('NoteBody');
+	body = body.replace(/\\n/g, '\n')  //replace newlines
+		       .replace(/\\t/g, '\t'); //replace tabs
 	let note
 	for (note of notes.items) {
 		if (note.parent_id == parent.id && note.title == noteName) {
@@ -192,7 +195,7 @@ async function createNote(notePath) {
 			return note;
 		}
 	}
-	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parent ? parent.id : '' });
+	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parent ? parent.id : '', body: body });
 
 	return note;
 }
@@ -402,7 +405,15 @@ joplin.plugins.register({
 				label: 'Quarter Name',
 				description: "Custom {{quarterName}}, each value is separated by ','",
 			},
-
+			'NoteBody': {
+				value: '',
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Default content of the note',
+				description: "Use \\n to insert a newline and \\t for a tab"
+			},
 			'iso8601': {
 				value: true,
 				type: SettingItemType.Bool,
