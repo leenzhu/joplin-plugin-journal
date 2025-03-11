@@ -597,6 +597,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkOffsetTodayNote",
 			label: "Insert link to Today's Note (with Offset)",
+			iconName: "fas fa-calendar-times",
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
@@ -622,6 +623,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today'",
+			iconName: "fas fa-calendar-minus",
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
@@ -633,6 +635,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkOffsetTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today' (with Offset) ",
+			iconName: "fas fa-calendar-minus",
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
@@ -721,10 +724,25 @@ joplin.plugins.register({
 				"linkTodayNoteMobile",
 				"linkTodayNote",
 				ToolbarButtonLocation.EditorToolbar
-		  	);
+			);
+			await joplin.views.toolbarButtons.create(
+				"linkOffsetTodayNoteMobile",
+				"linkOffsetTodayNote",
+				ToolbarButtonLocation.EditorToolbar
+			);
 			await joplin.views.toolbarButtons.create(
 				"linkOtherDayNoteMobile",
 				"linkOtherDayNote",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkTodayNotewithLabelMobile",
+				"linkTodayNoteWithLabel",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkOffsetTodayNotewithLabelMobile",
+				"linkOffsetTodayNoteWithLabel",
 				ToolbarButtonLocation.EditorToolbar
 		  	);
 		}
