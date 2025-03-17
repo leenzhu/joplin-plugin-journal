@@ -232,16 +232,18 @@ async function insertTemplate(noteId) {
 		return;
 	}
 	const noteBody = (await joplin.data.get(["notes", noteId], { fields: ["body"] }))["body"];
-	if (noteBody) {
+	const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+	// don't insert if body already has content, unless setting is set to insert every time
+	if (noteBody && !insertTemplateEveryTime) {
 		return;
 	}
 	try {
-		const template = await joplin.data.get(["notes", templateId], { fields: ["body"] });
-		console.log("insert body: ", template["body"]);
-		await joplin.data.put(["notes", noteId], null, { "body": template["body"] });
+		const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
+		await joplin.data.put(["notes", noteId], null, { "body": noteBody + templateBody });
+		console.log("Journal: inserted template");
 	}
 	catch (error) {
-		console.error("Failed to insert template with id:", error);
+		console.error("Journal: failed to insert template:", error);
 		await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
 			{ message: "Error in Journal-Plugin: please check that the setting 'Note Template Id' contains a valid note id.",
 				duration:5000, timestamp:Date.now(), type:"error" })
@@ -432,6 +434,15 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Note Template ID',
 				description: "ID of the note that will be used as a template on creation of the note."
+			},
+			'insertTemplateEveryTime': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Insert template every time note is opened',
+				description: "If checked, the template defined in 'Note Template ID' will be inserted every time the note is opened."
 			},
 			'iso8601': {
 				value: true,
