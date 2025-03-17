@@ -185,9 +185,6 @@ async function createNote(notePath) {
 	}
 
 	let notes = await joplin.data.get(["search"], { query: `/"${noteName}"`, type: "note" });
-	let body = await joplin.settings.value('NoteBody');
-	body = body.replace(/\\n/g, '\n')  //replace newlines
-		       .replace(/\\t/g, '\t'); //replace tabs
 	let note
 	for (note of notes.items) {
 		if (note.parent_id == parent.id && note.title == noteName) {
@@ -195,7 +192,7 @@ async function createNote(notePath) {
 			return note;
 		}
 	}
-	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parent ? parent.id : '', body: body });
+	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parent ? parent.id : '' });
 
 	return note;
 }
@@ -226,6 +223,28 @@ async function addNoteTags(noteId) {
 		await joplin.data.post(['tags', tagId, 'notes'], null, {
 		 	id: noteId
 		});
+	}
+}
+
+async function insertTemplate(noteId) {
+	const templateId = await joplin.settings.value('TemplateId');
+	if (!templateId) {
+		return;
+	}
+	const noteBody = (await joplin.data.get(["notes", noteId], { fields: ["body"] }))["body"];
+	if (noteBody) {
+		return;
+	}
+	try {
+		const template = await joplin.data.get(["notes", templateId], { fields: ["body"] });
+		console.log("insert body: ", template["body"]);
+		await joplin.data.put(["notes", noteId], null, { "body": template["body"] });
+	}
+	catch (error) {
+		console.error("Failed to insert template with id:", error);
+		await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
+			{ message: "Error in Journal-Plugin: please check that the setting 'Note Template Id' contains a valid note id.",
+				duration:5000, timestamp:Date.now(), type:"error" })
 	}
 }
 
@@ -405,14 +424,14 @@ joplin.plugins.register({
 				label: 'Quarter Name',
 				description: "Custom {{quarterName}}, each value is separated by ','",
 			},
-			'NoteBody': {
+			'TemplateId': {
 				value: '',
 				type: SettingItemType.String,
 				section: 'Journal',
 				public: true,
 				advanced: true,
-				label: 'Default content of the note',
-				description: "Use \\n to insert a newline and \\t for a tab"
+				label: 'Note Template ID',
+				description: "ID of the note that will be used as a template on creation of the note."
 			},
 			'iso8601': {
 				value: true,
@@ -520,6 +539,7 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
+				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -531,6 +551,7 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
+				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -543,6 +564,7 @@ joplin.plugins.register({
 				let d = await getDateByDialog();
 				if (d !== null) {
 					const note = await createNoteByDate(d);
+					await insertTemplate(note.id);
 					await joplin.commands.execute("openNote", note.id);
 					await joplin.commands.execute('editor.focus');
 				}
