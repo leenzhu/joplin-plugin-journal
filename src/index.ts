@@ -544,6 +544,8 @@ joplin.plugins.register({
 			},
 		});
 
+		const isMobilePlatform = await isMobile();
+
 		await joplin.commands.register({
 			name: "openTodayNote",
 			label: "Open Today's Note",
@@ -552,7 +554,9 @@ joplin.plugins.register({
 				const note = await createNoteByDate(d);
 				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
-				await joplin.commands.execute('editor.focus');
+				if (!isMobilePlatform) {
+					await joplin.commands.execute('editor.focus');
+				}
 			}
 		});
 
@@ -564,7 +568,9 @@ joplin.plugins.register({
 				const note = await createNoteByDate(d);
 				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
-				await joplin.commands.execute('editor.focus');
+				if (!isMobilePlatform) {
+					await joplin.commands.execute('editor.focus');
+				}
 			}
 		});
 
@@ -577,7 +583,9 @@ joplin.plugins.register({
 					const note = await createNoteByDate(d);
 					await insertTemplate(note.id);
 					await joplin.commands.execute("openNote", note.id);
-					await joplin.commands.execute('editor.focus');
+					if (!isMobilePlatform) {
+						await joplin.commands.execute('editor.focus');
+					}
 				}
 			}
 		});
@@ -590,7 +598,6 @@ joplin.plugins.register({
 				const d = new Date();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
@@ -602,7 +609,6 @@ joplin.plugins.register({
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
@@ -615,7 +621,6 @@ joplin.plugins.register({
 				if (d !== null) {
 					const note = await createNoteByDate(d);
 					await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-					await joplin.commands.execute('editor.focus');
 				}
 			}
 		});
@@ -628,7 +633,6 @@ joplin.plugins.register({
 				const d = new Date();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
@@ -640,7 +644,6 @@ joplin.plugins.register({
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
@@ -663,7 +666,6 @@ joplin.plugins.register({
 			}, 2000);
 		}
 
-		const isMobilePlatform = await isMobile();
 		if (isMobilePlatform) {
 			console.log({isMobilePlatform})
 			await joplin.settings.registerSettings({
