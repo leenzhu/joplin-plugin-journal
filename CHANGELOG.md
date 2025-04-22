@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.0.0 (2025-04-22)
+1. **FEAT** #35 Add option to insert content to the note body on creation. Thanks @Meisenburger13
+
 ## v1.3.0 (2025-03-07)
 
 1. FEAT #32 PR: Add option to shift the start hour of the day. Thanks @Meisenburger13
