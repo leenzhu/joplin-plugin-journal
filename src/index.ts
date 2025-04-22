@@ -226,6 +226,30 @@ async function addNoteTags(noteId) {
 	}
 }
 
+async function insertTemplate(noteId) {
+	const templateId = await joplin.settings.value('TemplateId');
+	if (!templateId) {
+		return;
+	}
+	const noteBody = (await joplin.data.get(["notes", noteId], { fields: ["body"] }))["body"];
+	const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+	// don't insert if body already has content, unless setting is set to insert every time
+	if (noteBody && !insertTemplateEveryTime) {
+		return;
+	}
+	try {
+		const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
+		await joplin.data.put(["notes", noteId], null, { "body": noteBody + templateBody });
+		console.log("Journal: inserted template");
+	}
+	catch (error) {
+		console.error("Journal: failed to insert template:", error);
+		await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
+			{ message: "Error in Journal-Plugin: please check that the setting 'Note Template Id' contains a valid note id.",
+				duration:5000, timestamp:Date.now(), type:"error" })
+	}
+}
+
 async function createNoteByDate(d) {
 	let noteName = await makeNoteName(d);
 	console.log("Make noteName: ", noteName);
@@ -402,7 +426,24 @@ joplin.plugins.register({
 				label: 'Quarter Name',
 				description: "Custom {{quarterName}}, each value is separated by ','",
 			},
-
+			'TemplateId': {
+				value: '',
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Note Template ID',
+				description: "ID of the note that will be used as a template on creation of the note."
+			},
+			'insertTemplateEveryTime': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Insert template every time note is opened',
+				description: "If checked, the template defined in 'Note Template ID' will be inserted every time the note is opened."
+			},
 			'iso8601': {
 				value: true,
 				type: SettingItemType.Bool,
@@ -509,6 +550,7 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
+				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -520,6 +562,7 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
+				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -532,6 +575,7 @@ joplin.plugins.register({
 				let d = await getDateByDialog();
 				if (d !== null) {
 					const note = await createNoteByDate(d);
+					await insertTemplate(note.id);
 					await joplin.commands.execute("openNote", note.id);
 					await joplin.commands.execute('editor.focus');
 				}
