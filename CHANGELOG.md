@@ -1,6 +1,9 @@
 # Changelog
 
 ## v2.0.0 (2025-04-22)
+1. **FEAT** #36 Add mobile support, resolves #24 and #29. Thanks @Meisenburger13
+
+## v2.0.0 (2025-04-22)
 1. **FEAT** #35 Add option to insert content to the note body on creation. Thanks @Meisenburger13
 
 ## v1.3.0 (2025-03-07)
