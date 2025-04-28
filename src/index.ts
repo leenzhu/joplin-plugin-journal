@@ -1,5 +1,5 @@
 import joplin from 'api';
-import { SettingItemType } from 'api/types';
+import { SettingItemType, ToolbarButtonLocation } from 'api/types';
 
 const defaultNoteName = 'Journal/{{year}}/{{monthName}}/{{year}}-{{month}}-{{day}}';
 const defaultMonthName = '01-Jan,02-Feb,03-Mar,04-Apr,05-May,06-Jun,07-Jul,08-Aug,09-Sep,10-Oct,11-Nov,12-Dec';
@@ -544,6 +544,8 @@ joplin.plugins.register({
 			},
 		});
 
+		const isMobilePlatform = await isMobile();
+
 		await joplin.commands.register({
 			name: "openTodayNote",
 			label: "Open Today's Note",
@@ -552,7 +554,9 @@ joplin.plugins.register({
 				const note = await createNoteByDate(d);
 				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
-				await joplin.commands.execute('editor.focus');
+				if (!isMobilePlatform) {
+					await joplin.commands.execute('editor.focus');
+				}
 			}
 		});
 
@@ -564,7 +568,9 @@ joplin.plugins.register({
 				const note = await createNoteByDate(d);
 				await insertTemplate(note.id);
 				await joplin.commands.execute("openNote", note.id);
-				await joplin.commands.execute('editor.focus');
+				if (!isMobilePlatform) {
+					await joplin.commands.execute('editor.focus');
+				}
 			}
 		});
 
@@ -577,7 +583,9 @@ joplin.plugins.register({
 					const note = await createNoteByDate(d);
 					await insertTemplate(note.id);
 					await joplin.commands.execute("openNote", note.id);
-					await joplin.commands.execute('editor.focus');
+					if (!isMobilePlatform) {
+						await joplin.commands.execute('editor.focus');
+					}
 				}
 			}
 		});
@@ -585,34 +593,34 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkTodayNote",
 			label: "Insert link to Today's Note",
+			iconName: "fas fa-calendar-times",
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
 		await joplin.commands.register({
 			name: "linkOffsetTodayNote",
 			label: "Insert link to Today's Note (with Offset)",
+			iconName: "fas fa-calendar-times",
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
 		await joplin.commands.register({
 			name: "linkOtherDayNote",
 			label: "Insert link to Another day's Note",
+			iconName: "fas fa-calendar-alt",
 			execute: async () => {
 				let d = await getDateByDialog();
 				if (d !== null) {
 					const note = await createNoteByDate(d);
 					await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
-					await joplin.commands.execute('editor.focus');
 				}
 			}
 		});
@@ -620,22 +628,22 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "linkTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today'",
+			iconName: "fas fa-calendar-minus",
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
 		await joplin.commands.register({
 			name: "linkOffsetTodayNoteWithLabel",
 			label: "Insert link to Today's Note with label 'Today' (with Offset) ",
+			iconName: "fas fa-calendar-minus",
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
-				await joplin.commands.execute('editor.focus');
 			}
 		});
 
@@ -657,5 +665,98 @@ joplin.plugins.register({
 				await joplin.commands.execute('openTodayNote');
 			}, 2000);
 		}
+
+		if (isMobilePlatform) {
+			console.log({isMobilePlatform})
+			await joplin.settings.registerSettings({
+				'openTodayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Today\'s Note option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+				'openOffsetTodayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Today\'s Note (with Offset) option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+				'openOtherdayNoteSetting': {
+					value: false,
+					type: SettingItemType.Bool,
+					section: 'Journal',
+					public: true,
+					advanced: true,
+					label: 'Add Open Another day\'s Note option to menu',
+					description: 'Adds the option to the three-dot menu on mobile. Needs restart to be effective',
+				},
+			});
+			const openTodayNoteSetting = await joplin.settings.value('openTodayNoteSetting') || false;
+			const openOffsetTodayNoteSetting = await joplin.settings.value('openOffsetTodayNoteSetting') || false;
+			const openOtherdayNoteSetting = await joplin.settings.value('openOtherdayNoteSetting') || false;
+			if (openTodayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openTodayNoteMobile",
+					"openTodayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+			if (openOffsetTodayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openOffsetTodayNoteMobile",
+					"openOffsetTodayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+			if (openOtherdayNoteSetting) {
+				await joplin.views.toolbarButtons.create(
+					"openOtherdayNoteMobile",
+					"openOtherdayNote",
+					ToolbarButtonLocation.NoteToolbar
+				);
+			}
+
+			await joplin.views.toolbarButtons.create(
+				"linkTodayNoteMobile",
+				"linkTodayNote",
+				ToolbarButtonLocation.EditorToolbar
+			);
+			await joplin.views.toolbarButtons.create(
+				"linkOffsetTodayNoteMobile",
+				"linkOffsetTodayNote",
+				ToolbarButtonLocation.EditorToolbar
+			);
+			await joplin.views.toolbarButtons.create(
+				"linkOtherDayNoteMobile",
+				"linkOtherDayNote",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkTodayNotewithLabelMobile",
+				"linkTodayNoteWithLabel",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+			await joplin.views.toolbarButtons.create(
+				"linkOffsetTodayNotewithLabelMobile",
+				"linkOffsetTodayNoteWithLabel",
+				ToolbarButtonLocation.EditorToolbar
+		  	);
+		}
 	},
 });
+
+const isMobile = async () => {
+	try {
+		const version = await joplin.versionInfo() as any;
+		return version?.platform === 'mobile';
+	} catch(error) {
+		console.warn('Error checking whether the device is a mobile device. Assuming desktop.', error);
+		return false;
+	}
+};
