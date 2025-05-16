@@ -588,6 +588,10 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
+				const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+				if (!insertTemplateEveryTime) {
+					await insertTemplate(note.id);
+				}
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -599,6 +603,10 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
+				const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+				if (!insertTemplateEveryTime) {
+					await insertTemplate(note.id);
+				}
 				await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -611,6 +619,10 @@ joplin.plugins.register({
 				let d = await getDateByDialog();
 				if (d !== null) {
 					const note = await createNoteByDate(d);
+					const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+					if (!insertTemplateEveryTime) {
+						await insertTemplate(note.id);
+					}
 					await joplin.commands.execute("insertText", `[${note.title}](:/${note.id})`);
 					await joplin.commands.execute('editor.focus');
 				}
@@ -623,6 +635,10 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDate(d);
+				const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+				if (!insertTemplateEveryTime) {
+					await insertTemplate(note.id);
+				}
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
 			}
@@ -634,6 +650,10 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = await getDateWithOffset();
 				const note = await createNoteByDate(d);
+				const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
+				if (!insertTemplateEveryTime) {
+					await insertTemplate(note.id);
+				}
 				await joplin.commands.execute("insertText", `[Today](:/${note.id})`);
 				await joplin.commands.execute('editor.focus');
 			}
