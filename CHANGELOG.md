@@ -1,10 +1,9 @@
 # Changelog
 
-## v2.0.1 (2025-05-21)
-
+## v2.1.1 (2025-05-21)
 1. **Improved** insert template when linking note (#37), only if template should not be inserted every time
 
-## v2.0.0 (2025-04-22)
+## v2.1.0 (2025-04-22)
 1. **FEAT** #36 Add mobile support, resolves #24 and #29. Thanks @Meisenburger13
 
 ## v2.0.0 (2025-04-22)
