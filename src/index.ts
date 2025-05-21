@@ -581,7 +581,7 @@ joplin.plugins.register({
 			label: "Open Today's Note (with Offset)",
 			execute: async () => {
 				const d = await getDateWithOffset();
-				createNoteByDateWithTemplateAndOpen(d);
+				await createNoteByDateWithTemplateAndOpen(d);
 			}
 		});
 
@@ -591,7 +591,7 @@ joplin.plugins.register({
 			execute: async () => {
 				let d = await getDateByDialog();
 				if (d !== null) {
-					createNoteByDateWithTemplateAndOpen(d);
+					await createNoteByDateWithTemplateAndOpen(d);
 				}
 			}
 		});
