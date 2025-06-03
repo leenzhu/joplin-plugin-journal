@@ -164,7 +164,7 @@ async function createFolder(folderName, parent) {
 
 	console.log(`Journal Create folder: ${folderName} with parent:`, parent);
 	for (found of founds.items) {
-		if (found.parent_id == (parent ? parent.id : found.parent_id)) {
+		if (found.parent_id == (parent ? parent.id : found.parent_id) && found.deleted_time == 0) {
 			return found;
 		}
 	}
@@ -186,8 +186,9 @@ async function createNote(notePath) {
 
 	let notes = await joplin.data.get(["search"], { query: `/"${noteName}"`, type: "note" });
 	let note
+
 	for (note of notes.items) {
-		if (note.parent_id == parent.id && note.title == noteName) {
+		if (note.parent_id == parent.id && note.title == noteName && note.deleted_time == 0) {
 			console.log(`Journal found note: ${note.title} with id ${note.id}`);
 			return note;
 		}
