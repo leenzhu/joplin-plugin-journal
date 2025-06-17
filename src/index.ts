@@ -606,7 +606,9 @@ joplin.plugins.register({
 			label: "Open Today's Note",
 			execute: async () => {
 				const d = new Date();
-				await createNoteByDateWithTemplateAndOpen(d);
+				const note = await createNoteByDateWithTemplateAndOpen(d);
+				// Pin the note tab using the tabsPinNote plugin
+				await joplin.commands.execute("tabsPinNote", [note.id]);
 			}
 		});
 
