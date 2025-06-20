@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.2.1 (2025-05-21)
+## v2.2.0 (2025-05-21)
 1. **Improved** create journal tree under selected folder (#39)
 
 ## v2.1.1 (2025-05-21)
