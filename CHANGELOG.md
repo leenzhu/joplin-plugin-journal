@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.1 (2025-05-21)
+1. **Improved** create journal tree under selected folder (#39)
+
 ## v2.1.1 (2025-05-21)
 1. **Improved** insert template when linking note (#37), only if template should not be inserted every time
 

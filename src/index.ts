@@ -174,11 +174,16 @@ async function createFolder(folderName, parent) {
 	return found;
 }
 
-async function createNote(notePath) {
+async function createNote(notePath, underSelected=false) {
 	const paths = notePath.split('/');
 	let folders = paths.slice(0, -1);
 	let noteName = paths[paths.length - 1];
 	let parent;
+
+    if (underSelected) {
+        const selected = await joplin.workspace.selectedFolder();
+        parent = selected;
+    }
 
 	for (let folder of folders) {
 		parent = await createFolder(folder, parent);
@@ -251,16 +256,16 @@ async function insertTemplate(noteId) {
 	}
 }
 
-async function createNoteByDate(d) {
+async function createNoteByDate(d,underSelected = false) {
 	let noteName = await makeNoteName(d);
 	console.log("Make noteName: ", noteName);
-	let note = await createNote(noteName);
+	let note = await createNote(noteName, underSelected);
 	await addNoteTags(note.id);
 	return note;
 }
 
-async function createNoteByDateWithTemplateAndOpen(d) {
-	const note = await createNoteByDate(d);
+async function createNoteByDateWithTemplateAndOpen(d,underSelected=false) {
+	const note = await createNoteByDate(d, underSelected);
 	await insertTemplate(note.id);
 	await joplin.commands.execute("openNote", note.id);
 	const isMobilePlatform = await isMobile();
@@ -578,6 +583,15 @@ joplin.plugins.register({
 		});
 
 		await joplin.commands.register({
+			name: "openTodayNoteUSF",
+			label: "Open Today's Note Under Selected Folder",
+			execute: async () => {
+				const d = new Date();
+				await createNoteByDateWithTemplateAndOpen(d, true);
+			}
+		});
+
+		await joplin.commands.register({
 			name: "openOffsetTodayNote",
 			label: "Open Today's Note (with Offset)",
 			execute: async () => {
@@ -596,6 +610,17 @@ joplin.plugins.register({
 				}
 			}
 		});
+		await joplin.commands.register({
+			name: "openOtherdayNoteUSF",
+			label: "Open Another day's Note Under Selected Folder",
+			execute: async () => {
+				let d = await getDateByDialog();
+				if (d !== null) {
+					await createNoteByDateWithTemplateAndOpen(d, true);
+				}
+			}
+		});
+
 		await joplin.commands.register({
 			name: "linkTodayNote",
 			label: "Insert link to Today's Note",
@@ -658,6 +683,9 @@ joplin.plugins.register({
 			{ label: "Open Today's Note (with Offset)", commandName: "openOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+D" },
 			{ label: "Insert link to Today's Note (with Offset)", commandName: "linkOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+L" },
 			{ label: "Insert link to Today's Note with Label (with Offset)", commandName: "linkOffsetTodayNoteWithLabel", accelerator: "CmdOrCtrl+Shift+Alt+I" },
+
+			{ label: "Open Today's Note Under Selected Folder", commandName: "openTodayNoteUSF"},
+			{ label: "Open Another day's Note Under Selected Folder", commandName: "openOtherdayNoteUSF"},
 		]);
 
 		const shouldOpen = await joplin.settings.value('OpenAtStartup') || false;
