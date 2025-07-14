@@ -576,6 +576,7 @@ joplin.plugins.register({
 		await joplin.commands.register({
 			name: "openTodayNote",
 			label: "Open Today's Note",
+			iconName: 'fas fa-calendar-day',
 			execute: async () => {
 				const d = new Date();
 				await createNoteByDateWithTemplateAndOpen(d);
@@ -671,6 +672,12 @@ joplin.plugins.register({
 				await linkNote(d, true);
 			}
 		});
+
+        await joplin.views.toolbarButtons.create(
+            'journal_open_today_node',
+            'openTodayNote',
+            ToolbarButtonLocation.NoteToolbar
+        )
 
 		await joplin.views.menus.create('journal-menu', 'Journal', [
 			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
