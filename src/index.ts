@@ -607,6 +607,9 @@ joplin.plugins.register({
 			execute: async () => {
 				const d = new Date();
 				const note = await createNoteByDateWithTemplateAndOpen(d);
+				// Clear existing journal tabs
+				await joplin.commands.execute("tabsClearJournal");
+				
 				// Pin the note tab using the tabsPinNote plugin
 				await joplin.commands.execute("tabsPinNote", [note.id]);
 			}
