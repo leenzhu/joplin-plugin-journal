@@ -1,4 +1,4 @@
-# Joplin Plugin - Journal
+# Joplin Plugin - Journal (Wisdom Snippet)
 
 Create or open a note for today, or for another date selected from a date picker. This plugin will create a folder hierarchy for you.
 
