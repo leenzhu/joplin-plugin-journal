@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.0 (2026-05-29)
+1. **FEAT** Expand template variables in inserted note content.
+2. **FEAT** Add a manual "Insert Default Template" menu command.
+3. **FIX** Show an error when manually inserting a template without a configured template note.
+
 ## v2.4.0 (2026-05-29)
 1. **FEAT** #45 Add `{{decade}}` template variable.
 
