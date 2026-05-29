@@ -740,11 +740,13 @@ joplin.plugins.register({
 			}
 		});
 
-        await joplin.views.toolbarButtons.create(
-            'journal_open_today_node',
-            'openTodayNote',
-            ToolbarButtonLocation.NoteToolbar
-        )
+		if (!isMobilePlatform) {
+			await joplin.views.toolbarButtons.create(
+				'journal_open_today_node',
+				'openTodayNote',
+				ToolbarButtonLocation.NoteToolbar
+			);
+		}
 
 		await joplin.views.menus.create('journal-menu', 'Journal', [
 			{ label: "Open Today's Note", commandName: "openTodayNote", accelerator: "CmdOrCtrl+Alt+D" },
