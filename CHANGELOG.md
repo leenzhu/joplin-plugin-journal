@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.5.1 (2026-05-29)
+1. **FIX** Add package repository metadata required for npm provenance publishing.
+
 ## v2.5.0 (2026-05-29)
 1. **FEAT** Expand template variables in inserted note content.
 2. **FEAT** Add a manual "Insert Default Template" menu command.
