@@ -38,7 +38,7 @@ function tplEngin(tpl, data) {
 	return tpl;
 }
 
-async function makeNoteName(d) {
+async function makeTemplateData(d) {
 	const year = d.getFullYear();
 	const decade = `${Math.floor(year / 10) * 10}s`;
 	const month = d.getMonth() + 1;
@@ -156,6 +156,15 @@ async function makeNoteName(d) {
 	data.quarter = `${quarter}`;
 	data.quarterName = quarterNames[quarter-1];
 	console.log(`Journal tmpl data: `, data);
+
+	return {
+		noteTmpl,
+		data,
+	};
+}
+
+async function makeNoteName(d) {
+	const { noteTmpl, data } = await makeTemplateData(d);
 	const noteName = tplEngin(noteTmpl, data);
 
 	return noteName;
@@ -235,7 +244,7 @@ async function addNoteTags(noteId) {
 	}
 }
 
-async function insertTemplate(noteId) {
+async function insertTemplate(noteId, d) {
 	const templateId = await joplin.settings.value('TemplateId');
 	if (!templateId) {
 		return;
@@ -248,7 +257,9 @@ async function insertTemplate(noteId) {
 	}
 	try {
 		const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
-		await joplin.data.put(["notes", noteId], null, { "body": noteBody + templateBody });
+		const { data } = await makeTemplateData(d);
+		const noteTemplateBody = tplEngin(templateBody, data);
+		await joplin.data.put(["notes", noteId], null, { "body": noteBody + noteTemplateBody });
 		console.log("Journal: inserted template");
 	}
 	catch (error) {
@@ -269,7 +280,7 @@ async function createNoteByDate(d,underSelected = false) {
 
 async function createNoteByDateWithTemplateAndOpen(d,underSelected=false) {
 	const note = await createNoteByDate(d, underSelected);
-	await insertTemplate(note.id);
+	await insertTemplate(note.id, d);
 	await joplin.commands.execute("openNote", note.id);
 	const isMobilePlatform = await isMobile();
 	if (!isMobilePlatform) {
@@ -283,7 +294,7 @@ async function linkNote(d, withLable= false) {
 	const note = await createNoteByDate(d);
 	const insertTemplateEveryTime = await joplin.settings.value('insertTemplateEveryTime');
 	if (!insertTemplateEveryTime) {
-		await insertTemplate(note.id);
+		await insertTemplate(note.id, d);
 	}
 	await joplin.commands.execute("insertText", `[${withLable ? "Today" : note.title}](:/${note.id})`);
 	return note;
