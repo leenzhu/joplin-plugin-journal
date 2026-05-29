@@ -76,7 +76,7 @@ async function makeTemplateData(d) {
 		quarterNames = defaultQuarterName.split(',');
 	}
 
-	console.log(`Jouranl tmpl: ${noteTmpl}, monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
+	console.log(`Jouranl tmpl data styles: monthStyle:${monthStyle}, dayStyle:${dayStyle}, weekdayStyle:${weekdayStyle}`);
 	let data = {
 		year: '',
 		decade: '',
@@ -157,14 +157,13 @@ async function makeTemplateData(d) {
 	data.quarterName = quarterNames[quarter-1];
 	console.log(`Journal tmpl data: `, data);
 
-	return {
-		noteTmpl,
-		data,
-	};
+	return data;
 }
 
 async function makeNoteName(d) {
-	const { noteTmpl, data } = await makeTemplateData(d);
+	const noteTmpl = await joplin.settings.value('NoteTemplate') || defaultNoteName;
+	const data = await makeTemplateData(d);
+	console.log(`Jouranl tmpl: ${noteTmpl}`);
 	const noteName = tplEngin(noteTmpl, data);
 
 	return noteName;
@@ -257,7 +256,7 @@ async function insertTemplate(noteId, d) {
 	}
 	try {
 		const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
-		const { data } = await makeTemplateData(d);
+		const data = await makeTemplateData(d);
 		const noteTemplateBody = tplEngin(templateBody, data);
 		await joplin.data.put(["notes", noteId], null, { "body": noteBody + noteTemplateBody });
 		console.log("Journal: inserted template");
