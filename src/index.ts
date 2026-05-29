@@ -196,6 +196,7 @@ async function createNote(notePath, underSelected=false) {
 	let folders = paths.slice(0, -1);
 	let noteName = paths[paths.length - 1];
 	let parent;
+	const parentId = () => parent ? parent.id : '';
 
     if (underSelected) {
         const selected = await joplin.workspace.selectedFolder();
@@ -206,16 +207,38 @@ async function createNote(notePath, underSelected=false) {
 		parent = await createFolder(folder, parent);
 	}
 
-	let notes = await joplin.data.get(["search"], { query: `/"${noteName}"`, type: "note" });
-	let note
+	const allowCustomTitleSuffix = await joplin.settings.value('AllowCustomTitleSuffix') || false;
+	let notes = await joplin.data.get(["search"], {
+		query: `/"${noteName}"`,
+		type: "note",
+		fields: ["id", "parent_id", "title", "deleted_time", "user_created_time"],
+	});
+	let note;
+	let prefixMatches = [];
 
 	for (note of notes.items) {
-		if (note.parent_id == parent.id && note.title == noteName && note.deleted_time == 0) {
+		if (note.parent_id != parentId() || note.deleted_time != 0) {
+			continue;
+		}
+
+		if (note.title == noteName) {
 			console.log(`Journal found note: ${note.title} with id ${note.id}`);
 			return note;
 		}
+
+		if (allowCustomTitleSuffix && note.title.startsWith(noteName)) {
+			prefixMatches.push(note);
+		}
 	}
-	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parent ? parent.id : '' });
+
+	if (prefixMatches.length > 0) {
+		prefixMatches.sort((a, b) => a.user_created_time - b.user_created_time);
+		note = prefixMatches[0];
+		console.log(`Journal found prefixed note: ${note.title} with id ${note.id}`);
+		return note;
+	}
+
+	note = await joplin.data.post(["notes"], null, { title: noteName, parent_id: parentId() });
 
 	return note;
 }
@@ -519,6 +542,15 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Note Template ID',
 				description: "ID of the note that will be used as a template on creation of the note."
+			},
+			'AllowCustomTitleSuffix': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Allow custom title suffix',
+				description: "If checked, Journal will match notes whose titles start with the generated title. Exact title matches are preferred, otherwise the earliest created prefixed match is used.",
 			},
 			'insertTemplateEveryTime': {
 				value: false,
