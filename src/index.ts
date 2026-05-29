@@ -80,6 +80,9 @@ async function makeTemplateData(d) {
 	let data = {
 		year: '',
 		decade: '',
+		date: '',
+		time: '',
+		datetime: '',
 		month: '',
 		monthName: '',
 		day: '',
@@ -96,6 +99,9 @@ async function makeTemplateData(d) {
 	};
 	data.year = '' + year; // convert number to string
 	data.decade = decade;
+	data.date = `${year}-${padding(month)}-${padding(day)}`;
+	data.time = `${padding(hour)}:${padding(min)}`;
+	data.datetime = `${data.date} ${data.time}`;
 	switch (monthStyle) {
 		case 'pad_num':
 			data.month = padding(month);
@@ -425,7 +431,7 @@ joplin.plugins.register({
 				section: 'Journal',
 				public: true,
 				label: 'Note Name Template',
-				description: `There are several variables: {{year}}, {{decade}}, {{month}}, {{monthName}}, {{quarter}}, {{quarterName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default value is: '${defaultNoteName}'.`
+				description: `There are several variables: {{year}}, {{decade}}, {{date}}, {{time}}, {{datetime}}, {{month}}, {{monthName}}, {{quarter}}, {{quarterName}}, {{day}}, {{hour}}, {{hour12}}, {{ampm}}, {{min}}, {{weekday}}, {{weekdayName}}, {{weekNum}}, which will expand into the actual value when opening or creating notes. The '/' character will create a hierarchical folder. The default value is: '${defaultNoteName}'.`
 			},
 
 			'MonthStyle': {
