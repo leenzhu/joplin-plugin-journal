@@ -8,6 +8,14 @@
     "updateVersion": "webpack --env joplin-plugin-config=updateVersion"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leenzhu/joplin-plugin-journal"
+  },
+  "homepage": "https://github.com/leenzhu/joplin-plugin-journal",
+  "bugs": {
+    "url": "https://github.com/leenzhu/joplin-plugin-journal/issues"
+  },
   "keywords": [
     "joplin-plugin"
   ],
