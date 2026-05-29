@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.6.0 (2026-05-29)
+1. **FEAT** Add `{{date}}`, `{{time}}`, and `{{datetime}}` template variables.
+
 ## v2.5.1 (2026-05-29)
 1. **FIX** Add package repository metadata required for npm provenance publishing.
 
