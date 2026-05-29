@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.4.0 (2026-05-29)
+1. **FEAT** #45 Add `{{decade}}` template variable.
+
 ## v2.2.0 (2025-05-21)
 1. **Improved** create journal tree under selected folder (#39)
 
