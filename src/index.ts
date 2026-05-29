@@ -282,9 +282,16 @@ async function showTemplateInsertError(error) {
 			duration:5000, timestamp:Date.now(), type:"error" })
 }
 
+async function showTemplateMissingError() {
+	await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
+		{ message: "Error in Journal-Plugin: please configure 'Note Template Id' before inserting a template.",
+			duration:5000, timestamp:Date.now(), type:"error" })
+}
+
 async function insertDefaultTemplate() {
 	const templateId = await joplin.settings.value('TemplateId');
 	if (!templateId) {
+		await showTemplateMissingError();
 		return;
 	}
 
