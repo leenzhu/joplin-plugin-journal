@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.7.0 (2026-05-29)
+1. **FEAT** Support matching journal notes with custom title suffixes.
+
 ## v2.6.1 (2026-05-29)
 1. **FIX** Avoid showing the "Open Today's Note" action twice on Android.
 
