@@ -255,17 +255,49 @@ async function insertTemplate(noteId, d) {
 		return;
 	}
 	try {
-		const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
-		const data = await makeTemplateData(d);
-		const noteTemplateBody = tplEngin(templateBody, data);
+		const noteTemplateBody = await makeTemplateBody(d);
 		await joplin.data.put(["notes", noteId], null, { "body": noteBody + noteTemplateBody });
 		console.log("Journal: inserted template");
 	}
 	catch (error) {
-		console.error("Journal: failed to insert template:", error);
-		await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
-			{ message: "Error in Journal-Plugin: please check that the setting 'Note Template Id' contains a valid note id.",
-				duration:5000, timestamp:Date.now(), type:"error" })
+		await showTemplateInsertError(error);
+	}
+}
+
+async function makeTemplateBody(d) {
+	const templateId = await joplin.settings.value('TemplateId');
+	if (!templateId) {
+		return '';
+	}
+
+	const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
+	const data = await makeTemplateData(d);
+	return tplEngin(templateBody, data);
+}
+
+async function showTemplateInsertError(error) {
+	console.error("Journal: failed to insert template:", error);
+	await (joplin.views.dialogs as any).showToast( // currently an error in the api, any should be able to be removed at some point
+		{ message: "Error in Journal-Plugin: please check that the setting 'Note Template Id' contains a valid note id.",
+			duration:5000, timestamp:Date.now(), type:"error" })
+}
+
+async function insertDefaultTemplate() {
+	const templateId = await joplin.settings.value('TemplateId');
+	if (!templateId) {
+		return;
+	}
+
+	try {
+		const templateBody = await makeTemplateBody(new Date());
+		if (!templateBody) {
+			return;
+		}
+		await joplin.commands.execute("insertText", templateBody);
+		console.log("Journal: inserted template into current note");
+	}
+	catch (error) {
+		await showTemplateInsertError(error);
 	}
 }
 
@@ -686,6 +718,15 @@ joplin.plugins.register({
 			}
 		});
 
+		await joplin.commands.register({
+			name: "insertDefaultTemplate",
+			label: "Insert Default Template",
+			iconName: "fas fa-file-import",
+			execute: async () => {
+				await insertDefaultTemplate();
+			}
+		});
+
         await joplin.views.toolbarButtons.create(
             'journal_open_today_node',
             'openTodayNote',
@@ -699,6 +740,7 @@ joplin.plugins.register({
 			{ label: "Insert link to Another day's Note", commandName: "linkOtherDayNote", accelerator: "CmdOrCtrl+Alt+T" },
 
 			{ label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
+			{ label: "Insert Default Template", commandName: "insertDefaultTemplate" },
 
 			{ label: "Open Today's Note (with Offset)", commandName: "openOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+D" },
 			{ label: "Insert link to Today's Note (with Offset)", commandName: "linkOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+L" },
