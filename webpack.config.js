@@ -225,6 +225,8 @@ const pluginConfig = { ...baseConfig, entry: './src/index.ts',
 				{
 					from: path.resolve(rootDir, 'wisdom.md'),
 					to: distDir,
+					// Optional: snippets normally come from the wisdom note instead.
+					noErrorOnMissing: true,
 				},
 			],
 		}),

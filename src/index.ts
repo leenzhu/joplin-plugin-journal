@@ -230,27 +230,87 @@ async function addNoteTags(noteId) {
 }
 
 /**
- * Loads the wisdom markdown file from the plugin directory,
- * splits on two-or-more newlines, and returns a random snippet.
+ * Reads the wisdom source note named by the 'WisdomNoteId' setting. The setting
+ * accepts either a note id or a note title, so it can be filled in by hand.
+ * Returns '' when the setting is empty or the note cannot be found.
  */
-async function getRandomWisdomSnippet(): Promise<string> {
+async function getWisdomNoteBody(): Promise<string> {
+    const wisdomNote = ((await joplin.settings.value('WisdomNoteId')) || '').trim();
+    if (!wisdomNote) {
+        return '';
+    }
+    try {
+        const note = await joplin.data.get(['notes', wisdomNote], { fields: ['body'] });
+        if (note && note['body']) {
+            return note['body'];
+        }
+    } catch (err) {
+        // Not an id (or the note is gone): fall through and try it as a title.
+    }
+    try {
+        const found = await joplin.data.get(['search'], {
+            query: wisdomNote, type: 'note', fields: ['id', 'title', 'body'],
+        });
+        const items = (found && found['items']) || [];
+        const match = items.find(n => n.title === wisdomNote) || items[0];
+        if (match && match['body']) {
+            return match['body'];
+        }
+    } catch (err) {
+        console.error('Journal: failed to search for wisdom note:', err);
+    }
+    console.warn(`Journal: no wisdom note found for '${wisdomNote}'`);
+    return '';
+}
+
+/**
+ * Reads the wisdom markdown file bundled in the plugin directory. This is the
+ * fallback for when no wisdom note is configured; it requires a rebuild of the
+ * plugin to pick up changes, so prefer the note.
+ */
+async function getWisdomFileBody(): Promise<string> {
     const pluginDir = await joplin.plugins.installationDir();
     const filePath = path.join(pluginDir, 'wisdom.md');
-    let content: string;
+    if (!fs.existsSync(filePath)) {
+        return '';
+    }
     try {
-        content = fs.readFileSync(filePath, 'utf8');
+        return fs.readFileSync(filePath, 'utf8');
     } catch (err) {
         console.error('Journal: failed to read wisdom file:', err);
         return '';
     }
+}
+
+/**
+ * Loads the wisdom source, splits on two-or-more newlines, and returns a random
+ * snippet. Markdown headings are dropped so that the section titles used to
+ * organise the note ('# Hagakure' and the like) are never picked as a snippet.
+ */
+async function getRandomWisdomSnippet(): Promise<string> {
+    const content = (await getWisdomNoteBody()) || (await getWisdomFileBody());
+    if (!content) {
+        return '';
+    }
     // Split on two or more line breaks
-    const snippets = content.split(/\n{2,}/g).map(s => s.trim()).filter(s => s.length);
+    const snippets = content
+        .split(/\n{2,}/g)
+        .map(s => s.replace(/<br\s*\/?>/gi, '').replace(/&nbsp;/gi, ' ').trim())
+        .filter(s => s.length && !s.startsWith('#'));
     if (snippets.length === 0) {
-        console.warn('Journal: no snippets found in wisdom.md');
+        console.warn('Journal: no snippets found in wisdom source');
         return '';
     }
     const idx = Math.floor(Math.random() * snippets.length);
     return snippets[idx];
+}
+
+/**
+ * Renders a snippet as a markdown blockquote, quoting every line so that
+ * multi-line snippets stay inside the quote.
+ */
+function asBlockquote(snippet: string): string {
+    return snippet.split('\n').map(line => `> ${line}`.trimEnd()).join('\n');
 }
 
 async function insertTemplate(noteId) {
@@ -272,7 +332,12 @@ async function insertTemplate(noteId) {
 			return;
 		}
 		const snippet = await getRandomWisdomSnippet();
-		const finalBody = noteBody + templateBody + (snippet ? `\n\n> ${snippet}` : '');
+		// Separate from whatever is already there, otherwise the template is
+		// glued onto the last line: if that line is the previous run's snippet
+		// blockquote, markdown's lazy continuation swallows the whole template
+		// into the quote.
+		const separator = !noteBody || noteBody.endsWith('\n\n') ? '' : (noteBody.endsWith('\n') ? '\n' : '\n\n');
+		const finalBody = noteBody + separator + templateBody + (snippet ? `\n\n${asBlockquote(snippet)}` : '');
 		await joplin.data.put(["notes", noteId], null, { body: finalBody });
 		console.info("Journal: inserted template and wisdom snippet");
 	}
@@ -489,6 +554,15 @@ joplin.plugins.register({
 				advanced: true,
 				label: 'Note Template ID',
 				description: "ID of the note that will be used as a template on creation of the note."
+			},
+			'WisdomNoteId': {
+				value: '',
+				type: SettingItemType.String,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Wisdom Note ID or Title',
+				description: "ID (or title) of the note holding wisdom snippets, separated by blank lines. A random snippet is appended to the journal template as a blockquote. Leave empty to use the wisdom.md file bundled with the plugin."
 			},
 			'insertTemplateEveryTime': {
 				value: false,
