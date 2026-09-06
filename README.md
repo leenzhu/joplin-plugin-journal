@@ -97,7 +97,7 @@ On mobile, Journal can add selected "open note" actions to the note toolbar thro
 - `Add Open Today's Note (with Offset) option to menu`
 - `Add Open Another day's Note option to menu`
 
-Link insertion actions are also added to the mobile editor toolbar.
+Link insertion actions and `Insert memories` are also added to the mobile editor toolbar. Open a journal note in edit mode and tap the history button to insert links to entries from previous years at the cursor.
 
 ## Settings
 

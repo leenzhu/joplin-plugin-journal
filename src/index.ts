@@ -1070,6 +1070,11 @@ joplin.plugins.register({
 				"linkOffsetTodayNoteWithLabel",
 				ToolbarButtonLocation.EditorToolbar
 		  	);
+			await joplin.views.toolbarButtons.create(
+				"insertMemoriesMobile",
+				"insertMemories",
+				ToolbarButtonLocation.EditorToolbar
+			);
 		}
 	},
 });

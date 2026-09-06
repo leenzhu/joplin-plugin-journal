@@ -97,7 +97,7 @@
 - `Add Open Today's Note (with Offset) option to menu`
 - `Add Open Another day's Note option to menu`
 
-插入链接相关操作也会添加到移动端编辑器工具栏。
+插入链接相关操作和 `Insert memories` 也会添加到移动端编辑器工具栏。在编辑模式下打开日志笔记，然后点击历史记录按钮，即可在光标位置插入往年日志链接。
 
 ## 设置项说明
 
