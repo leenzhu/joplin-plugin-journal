@@ -1,6 +1,6 @@
 # Joplin Plugin - Journal
 
-Create or open a note for today, or for another date selected from a date picker. The plugin can build a notebook hierarchy from a template, insert template content into journal notes, and add links between notes.
+Create or open a note for today, or for another date selected from a date picker. The plugin can build a notebook hierarchy from a template, insert template content into journal notes, add links between notes, and revisit journal entries from the same date in previous years.
 
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal.png)
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal-setting.png)
@@ -15,6 +15,8 @@ Create or open a note for today, or for another date selected from a date picker
 - Insert links labeled `Today`.
 - Insert note template content automatically or manually.
 - Expand template variables in both note names and inserted note content.
+- Insert links to journal entries from the same month and day in previous years ("memories").
+- Add memories automatically to note content templates with `{{memories}}`.
 - Match notes by exact generated title, or optionally by generated-title prefix to allow custom title suffixes.
 - Add tags automatically to newly created journal notes.
 - Highlight dates with existing notes in the date picker.
@@ -39,8 +41,23 @@ Available actions:
 - `Insert link to Today's Note with Label`
 - `Insert link to Today's Note with Label (with Offset)`
 - `Insert Default Template`
+- `Insert memories`
 
 If the target note does not exist yet, Journal creates it automatically.
+
+### Memories
+
+`Insert memories` checks whether the currently selected note matches `Note Name Template`. If it does, Journal determines its date from the generated notebook path and note title, finds existing journal entries for the same month and day in previous years, and inserts one Markdown link per year at the cursor. Links are ordered from newest to oldest and each link is placed on its own line.
+
+For example, with `Timeline/{{year}}/{{year}}{{month}}{{day}}`, running the command in `Timeline/2026/20260906` can insert:
+
+```markdown
+[20250906 Plum](:/NOTE_ID)
+[20230906 Banana](:/NOTE_ID)
+[20210906 Cherry](:/NOTE_ID)
+```
+
+When `Allow custom title suffix` is enabled, suffixes such as ` Plum` are ignored when determining the journal date, but the complete note title is used as the link label. If an exact title and suffixed matches exist for the same year, the exact title is preferred; otherwise the earliest-created suffixed match is used. The command never creates missing notes.
 
 ### Keyboard Shortcuts
 
@@ -70,6 +87,7 @@ You can customize shortcuts via `Tools` -> `Options` -> `Keyboard Shortcuts`. Se
 - Template variables are expanded in the inserted content.
 - If `Insert template every time note is opened` is disabled, the template is inserted only when the note body is empty.
 - `Insert Default Template` manually inserts the configured template into the current note.
+- The content-only variable `{{memories}}` inserts the same list of previous-year links when the template is applied. If there are no matching entries, it expands to an empty string.
 
 ### Mobile
 
@@ -129,7 +147,7 @@ Journal templates can be used in two places:
 - `Note Name Template`: controls the generated journal note path and title.
 - `Note Template ID`: points to a note whose body will be inserted as the journal note content template.
 
-Template variables are expanded in both the note name template and the inserted note content template.
+The date and time variables below are expanded in both the note name template and the inserted note content template. `{{memories}}` is available only in the inserted note content template.
 
 ### Supported Variables
 
@@ -152,13 +170,14 @@ Template variables are expanded in both the note name template and the inserted 
 | `{{weekday}}` | Weekday number. The exact format depends on `Weekday Style`. | `05` or `5` |
 | `{{weekdayName}}` | Weekday label from the `Weekday Name` setting. | `Thu` |
 | `{{weekNum}}` | Week number based on the plugin's current week-number calculation. | `22` |
+| `{{memories}}` | Links to journal entries from the same month and day in previous years, one per line. Available only in the note content template. | `[20250906 Plum](:/NOTE_ID)` |
 
 ### Formatting Notes
 
 - A `/` in `Note Name Template` creates a notebook hierarchy.
 - `Month Name`, `Weekday Name`, and `Quarter Name` are user-configurable lists, so the rendered text depends on your settings.
 - `Month Style`, `Day Style`, `Weekday Style`, and `WeekNum Style` control whether numeric values are zero-padded or plain numbers.
-- Variables are expanded in both note names and inserted note content.
+- Date and time variables are expanded in both note names and inserted note content. `{{memories}}` works only in the note referenced by `Note Template ID` and cannot be used in `Note Name Template`.
 
 ### Default Note Name Template
 
@@ -183,6 +202,10 @@ Example inserted note content template:
 
 Created at {{time}}
 Week {{weekNum}}, {{weekdayName}}
+
+## On this day
+
+{{memories}}
 ```
 
 ## Known issues
