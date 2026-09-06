@@ -1,6 +1,6 @@
 # Joplin Plugin - Journal
 
-为今天创建或打开一篇日志笔记，或者通过日期选择器打开任意日期的日志。插件支持通过模板生成笔记本层级、向日志笔记插入模板内容，以及在笔记之间插入日志链接。
+为今天创建或打开一篇日志笔记，或者通过日期选择器打开任意日期的日志。插件支持通过模板生成笔记本层级、向日志笔记插入模板内容、在笔记之间插入日志链接，以及回顾往年同一天的日志。
 
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal.png)
 ![joplin-plugin-journal-screen-shot](https://raw.githubusercontent.com/leenzhu/joplin-plugin-journal/master/joplin-plugin-journal-setting.png)
@@ -15,6 +15,8 @@
 - 插入显示为 `Today` 的日志链接。
 - 自动或手动插入模板内容。
 - 在笔记标题模板和笔记内容模板中展开模板变量。
+- 插入往年同月同日的日志链接（“Memories”）。
+- 使用 `{{memories}}` 自动把往年回忆加入内容模板。
 - 通过精确匹配标题，或可选地通过标题前缀匹配来支持自定义标题后缀。
 - 自动为新建日志添加标签。
 - 在日期选择器中高亮已有日志的日期。
@@ -39,8 +41,23 @@
 - `Insert link to Today's Note with Label`
 - `Insert link to Today's Note with Label (with Offset)`
 - `Insert Default Template`
+- `Insert memories`
 
 如果目标笔记不存在，Journal 会自动创建。
+
+### Memories（往年回忆）
+
+`Insert memories` 会先检查当前笔记是否符合 `Note Name Template`，再从笔记本路径和标题中确定日期。随后，Journal 会查找往年同月同日已有的日志，并在光标位置按年份从新到旧插入链接，每个年份一行。此命令不会创建缺失的笔记。
+
+例如，使用 `Timeline/{{year}}/{{year}}{{month}}{{day}}` 时，在 `Timeline/2026/20260906` 中运行命令可以插入：
+
+```markdown
+[20250906 Plum](:/NOTE_ID)
+[20230906 Banana](:/NOTE_ID)
+[20210906 Cherry](:/NOTE_ID)
+```
+
+启用 `Allow custom title suffix` 后，确定日期时会忽略 ` Plum` 之类的自定义后缀，但链接文字仍使用完整标题。同一年存在精确标题和后缀匹配时优先选择精确标题；否则选择最早创建的后缀匹配。
 
 ### 快捷键
 
@@ -70,6 +87,7 @@
 - 插入模板内容时会展开模板变量。
 - 如果 `Insert template every time note is opened` 未启用，则只有在目标笔记正文为空时才插入模板。
 - `Insert Default Template` 会把当前配置的模板内容手动插入到当前笔记中。
+- 仅用于内容模板的变量 `{{memories}}` 会在应用模板时插入相同的往年链接列表；没有匹配记录时会替换为空文本。
 
 ### 移动端
 
@@ -79,7 +97,7 @@
 - `Add Open Today's Note (with Offset) option to menu`
 - `Add Open Another day's Note option to menu`
 
-插入链接相关操作也会添加到移动端编辑器工具栏。
+插入链接相关操作和 `Insert memories` 也会添加到移动端编辑器工具栏。在编辑模式下打开日志笔记，然后点击历史记录按钮，即可在光标位置插入往年日志链接。
 
 ## 设置项说明
 
@@ -129,7 +147,7 @@ Journal 的模板可用于两个位置：
 - `Note Name Template`：控制生成的日志笔记路径和标题。
 - `Note Template ID`：指向一个笔记，该笔记正文会作为日志内容模板插入。
 
-模板变量会同时在笔记标题模板和插入的笔记内容模板中展开。
+下面的日期和时间变量会同时在笔记标题模板和插入的笔记内容模板中展开。`{{memories}}` 仅适用于插入的笔记内容模板。
 
 ### 支持的变量
 
@@ -152,13 +170,14 @@ Journal 的模板可用于两个位置：
 | `{{weekday}}` | 星期数字，具体格式取决于 `Weekday Style`。 | `05` 或 `5` |
 | `{{weekdayName}}` | 来自 `Weekday Name` 设置的星期标签。 | `Thu` |
 | `{{weekNum}}` | 按插件当前周数算法计算的周序号。 | `22` |
+| `{{memories}}` | 往年同月同日的日志链接，每行一条。仅可用于笔记内容模板。 | `[20250906 Plum](:/NOTE_ID)` |
 
 ### 格式说明
 
 - `Note Name Template` 中的 `/` 会创建笔记本层级。
 - `Month Name`、`Weekday Name` 和 `Quarter Name` 都是可配置列表，因此最终渲染结果取决于你的设置。
 - `Month Style`、`Day Style`、`Weekday Style` 和 `WeekNum Style` 用于控制数字是零填充还是普通数字。
-- 模板变量会同时在笔记标题和插入的模板内容中展开。
+- 日期和时间变量会同时在笔记标题和插入的模板内容中展开。`{{memories}}` 只能用于 `Note Template ID` 指向的笔记，不能用于 `Note Name Template`。
 
 ### 默认笔记标题模板
 
@@ -183,6 +202,10 @@ Journal/{{year}}/{{monthName}}/{{date}}
 
 Created at {{time}}
 Week {{weekNum}}, {{weekdayName}}
+
+## On this day
+
+{{memories}}
 ```
 
 ## 已知问题

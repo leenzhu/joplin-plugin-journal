@@ -24,18 +24,10 @@ function padding(s) {
 }
 
 function tplEngin(tpl, data) {
-	const re = /{{([^}]+)?}}/
-	let match
-	while (match = re.exec(tpl)) {
-		let v = data[match[1]];
-		if (typeof (v) === "string") {
-			v.replace(/{/g, "<");
-			v.replace(/}/g, ">"); // trim marker, prevent deadloop if 'v' contains '{{...}}'
-		}
-		tpl = tpl.replace(match[0], v ? v : `errkey_${match[1]}`);
-	}
-
-	return tpl;
+	return tpl.replace(/{{([^}]+)?}}/g, (_match, key) => {
+		const value = data[key];
+		return value !== undefined && value !== null ? String(value) : `errkey_${key}`;
+	});
 }
 
 async function makeTemplateData(d) {
@@ -301,6 +293,9 @@ async function makeTemplateBody(d) {
 
 	const templateBody = (await joplin.data.get(["notes", templateId], { fields: ["body"] }))["body"];
 	const data = await makeTemplateData(d);
+	if (templateBody.includes('{{memories}}')) {
+		data['memories'] = await memoriesMarkdownForDate(d);
+	}
 	return tplEngin(templateBody, data);
 }
 
@@ -365,6 +360,188 @@ async function linkNote(d, withLable= false) {
 	}
 	await joplin.commands.execute("insertText", `[${withLable ? "Today" : note.title}](:/${note.id})`);
 	return note;
+}
+
+function escapeRegExp(value: string) {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function templatePathMatcher(template: string, allowTitleSuffix: boolean, monthNames: string[]) {
+	const values: string[] = [];
+	const patterns = {
+		year: '\\d{4}',
+		date: '\\d{4}-\\d{2}-\\d{2}',
+		datetime: '\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}',
+		month: '\\d{1,2}',
+		monthName: monthNames.map(escapeRegExp).join('|'),
+		day: '\\d{1,2}',
+	};
+	const parts = template.split('/');
+	const pattern = parts.map((part, partIndex) => {
+		let cursor = 0;
+		let result = '';
+		const placeholder = /{{([^}]+)}}/g;
+		let match: RegExpExecArray;
+		while ((match = placeholder.exec(part)) !== null) {
+			result += escapeRegExp(part.slice(cursor, match.index));
+			const key = match[1];
+			const capturePattern = patterns[key] || '[^/]+?';
+			result += `(${capturePattern})`;
+			values.push(key);
+			cursor = match.index + match[0].length;
+		}
+		result += escapeRegExp(part.slice(cursor));
+		if (allowTitleSuffix && partIndex === parts.length - 1) result += '.*';
+		return result;
+	}).join('/');
+
+	return { regex: new RegExp(`^${pattern}$`), values };
+}
+
+function dateFromTemplatePath(path: string, matcher, monthNames: string[]) {
+	const match = matcher.regex.exec(path);
+	if (!match) return null;
+
+	const data = {};
+	matcher.values.forEach((key, index) => {
+		if (data[key] === undefined) data[key] = match[index + 1];
+	});
+	let year: number;
+	let month: number;
+	let day: number;
+	const completeDate = data['date'] || data['datetime'];
+	if (completeDate) {
+		const dateParts = completeDate.slice(0, 10).split('-').map(Number);
+		[year, month, day] = dateParts;
+	} else {
+		year = Number(data['year']);
+		month = data['monthName'] ? monthNames.indexOf(data['monthName']) + 1 : Number(data['month']);
+		day = Number(data['day']);
+	}
+	if (!year || !month || !day) return null;
+	const date = new Date(year, month - 1, day);
+	if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+	return date;
+}
+
+async function getAll(resource: string, fields: string[]) {
+	const items = [];
+	let page = 1;
+	let response;
+	do {
+		response = await joplin.data.get([resource], { fields, page, limit: 100 });
+		items.push(...response.items);
+		page++;
+	} while (response.has_more);
+	return items;
+}
+
+async function getAllFolders() {
+	const response = await joplin.data.get(['folders'], { fields: ['id', 'parent_id', 'title', 'deleted_time'] });
+	const roots = Array.isArray(response) ? response : response.items;
+	const folders = [];
+	const visit = (folder) => {
+		folders.push(folder);
+		for (const child of folder.children || []) visit(child);
+	};
+	for (const root of roots || []) visit(root);
+	return folders;
+}
+
+async function showMemoriesMessage(message: string, type = 'info') {
+	await (joplin.views.dialogs as any).showToast({ message, duration: 5000, timestamp: Date.now(), type });
+}
+
+async function memoriesMarkdownForDate(selectedDate: Date) {
+	const template = await joplin.settings.value('NoteTemplate') || defaultNoteName;
+	const allowTitleSuffix = await joplin.settings.value('AllowCustomTitleSuffix') || false;
+	const configuredMonthNames = await joplin.settings.value('MonthName') || defaultMonthName;
+	let monthNames = configuredMonthNames.split(',');
+	if (monthNames.length !== 12) monthNames = defaultMonthName.split(',');
+	const matcher = templatePathMatcher(template, allowTitleSuffix, monthNames);
+	const folders = await getAllFolders();
+	const folderById = new Map(folders.filter(folder => !folder.deleted_time).map(folder => [folder.id, folder]));
+	const folderPath = (folderId: string) => {
+		const titles = [];
+		const visited = new Set();
+		while (folderId && folderById.has(folderId) && !visited.has(folderId)) {
+			visited.add(folderId);
+			const folder: any = folderById.get(folderId);
+			titles.unshift(folder.title);
+			folderId = folder.parent_id;
+		}
+		return titles.join('/');
+	};
+
+	const notes = await getAll('notes', ['id', 'parent_id', 'title', 'deleted_time', 'user_created_time']);
+	const candidatesByYear = new Map();
+	for (const note of notes) {
+		if (note.deleted_time !== 0) continue;
+		const path = [folderPath(note.parent_id), note.title].filter(Boolean).join('/');
+		const date = dateFromTemplatePath(path, matcher, monthNames);
+		if (!date || date.getFullYear() >= selectedDate.getFullYear() ||
+			date.getMonth() !== selectedDate.getMonth() || date.getDate() !== selectedDate.getDate()) continue;
+		const expectedPath = await makeNoteName(date);
+		if (path !== expectedPath && !(allowTitleSuffix && path.startsWith(expectedPath))) continue;
+		const year = date.getFullYear();
+		const candidate = { note, year, exact: path === expectedPath };
+		const previous = candidatesByYear.get(year);
+		if (!previous || (candidate.exact && !previous.exact) ||
+			(candidate.exact === previous.exact && note.user_created_time < previous.note.user_created_time)) {
+			candidatesByYear.set(year, candidate);
+		}
+	}
+
+	const memories = Array.from(candidatesByYear.values());
+	memories.sort((a, b) => b.year - a.year || a.note.title.localeCompare(b.note.title));
+	if (!memories.length) return '';
+	return memories.map(({ note }) => {
+		const label = note.title.replace(/([\\\[\]])/g, '\\$1');
+		return `[${label}](:/${note.id})`;
+	}).join('\n') + '\n';
+}
+
+async function insertMemories() {
+	const selectedNote = await joplin.workspace.selectedNote();
+	if (!selectedNote) {
+		await showMemoriesMessage('Journal: No note is selected.');
+		return;
+	}
+
+	const template = await joplin.settings.value('NoteTemplate') || defaultNoteName;
+	const allowTitleSuffix = await joplin.settings.value('AllowCustomTitleSuffix') || false;
+	const configuredMonthNames = await joplin.settings.value('MonthName') || defaultMonthName;
+	let monthNames = configuredMonthNames.split(',');
+	if (monthNames.length !== 12) monthNames = defaultMonthName.split(',');
+	const matcher = templatePathMatcher(template, allowTitleSuffix, monthNames);
+	const folders = await getAllFolders();
+	const folderById = new Map(folders.filter(folder => !folder.deleted_time).map(folder => [folder.id, folder]));
+	const folderPath = (folderId: string) => {
+		const titles = [];
+		const visited = new Set();
+		while (folderId && folderById.has(folderId) && !visited.has(folderId)) {
+			visited.add(folderId);
+			const folder: any = folderById.get(folderId);
+			titles.unshift(folder.title);
+			folderId = folder.parent_id;
+		}
+		return titles.join('/');
+	};
+	const notePath = [folderPath(selectedNote.parent_id), selectedNote.title].filter(Boolean).join('/');
+	const selectedDate = dateFromTemplatePath(notePath, matcher, monthNames);
+	const expectedSelectedPath = selectedDate ? await makeNoteName(selectedDate) : '';
+	if (!selectedDate || (expectedSelectedPath !== notePath &&
+		!(allowTitleSuffix && notePath.startsWith(expectedSelectedPath)))) {
+		await showMemoriesMessage('Journal: The selected note is not a journal entry.');
+		return;
+	}
+
+	const markdown = await memoriesMarkdownForDate(selectedDate);
+	if (!markdown) {
+		await showMemoriesMessage('Journal: No memories found for this date.');
+		return;
+	}
+	await joplin.commands.execute('insertText', markdown);
 }
 
 joplin.plugins.register({
@@ -541,7 +718,7 @@ joplin.plugins.register({
 				public: true,
 				advanced: true,
 				label: 'Note Template ID',
-				description: "ID of the note that will be used as a template on creation of the note."
+				description: "ID of the note that will be used as a template on creation of the note. Use {{memories}} to insert links to journal entries from previous years."
 			},
 			'AllowCustomTitleSuffix': {
 				value: false,
@@ -772,6 +949,13 @@ joplin.plugins.register({
 			}
 		});
 
+		await joplin.commands.register({
+			name: "insertMemories",
+			label: "Insert memories",
+			iconName: "fas fa-history",
+			execute: insertMemories,
+		});
+
 		if (!isMobilePlatform) {
 			await joplin.views.toolbarButtons.create(
 				'journal_open_today_node',
@@ -788,6 +972,7 @@ joplin.plugins.register({
 
 			{ label: "Insert link to Today's Note with Label", commandName: "linkTodayNoteWithLabel", accelerator: "CmdOrCtrl+Alt+I" },
 			{ label: "Insert Default Template", commandName: "insertDefaultTemplate" },
+			{ label: "Insert memories", commandName: "insertMemories" },
 
 			{ label: "Open Today's Note (with Offset)", commandName: "openOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+D" },
 			{ label: "Insert link to Today's Note (with Offset)", commandName: "linkOffsetTodayNote", accelerator: "CmdOrCtrl+Shift+Alt+L" },
@@ -885,6 +1070,11 @@ joplin.plugins.register({
 				"linkOffsetTodayNoteWithLabel",
 				ToolbarButtonLocation.EditorToolbar
 		  	);
+			await joplin.views.toolbarButtons.create(
+				"insertMemoriesMobile",
+				"insertMemories",
+				ToolbarButtonLocation.EditorToolbar
+			);
 		}
 	},
 });

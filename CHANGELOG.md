@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+1. **FEAT** Add an `Insert memories` command that links journal entries from the same date in previous years.
+2. **FEAT** Add the content-template-only `{{memories}}` variable.
+3. **FEAT** Add `Insert memories` to the mobile editor toolbar.
+4. **DOCS** Document memories, custom title suffix handling, template usage, and the mobile toolbar action.
+
 ## v2.7.0 (2026-05-29)
 1. **FEAT** Support matching journal notes with custom title suffixes.
 
