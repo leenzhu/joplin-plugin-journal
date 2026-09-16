@@ -498,7 +498,7 @@ async function memoriesMarkdownForDate(selectedDate: Date) {
 	return memories.map(({ note }) => {
 		const label = note.title.replace(/([\\\[\]])/g, '\\$1');
 		return `[${label}](:/${note.id})`;
-	}).join('\n') + '\n';
+	}).join('  \n') + '\n';
 }
 
 async function insertMemories() {
