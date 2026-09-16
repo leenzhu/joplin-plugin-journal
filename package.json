@@ -1,6 +1,7 @@
 {
   "name": "joplin-plugin-journal",
   "version": "2.7.0",
+  "description": "Create daily Joplin journal notes, use content templates, and revisit entries from the same date in previous years.",
   "scripts": {
     "dist": "webpack --env joplin-plugin-config=buildMain && webpack --env joplin-plugin-config=buildExtraScripts && webpack --env joplin-plugin-config=createArchive",
     "prepare": "npm run dist",

@@ -4,7 +4,7 @@
 	"app_min_version": "2.7",
 	"version": "2.7.0",
 	"name": "Journal",
-	"description": "A simple journal. Create or open a note for today, or any selected date.",
+	"description": "Create daily journal notes, use content templates, and revisit entries from the same date in previous years.",
 	"author": "Leen Zhu",
 	"homepage_url": "https://github.com/leenzhu/joplin-plugin-journal",
 	"repository_url": "https://github.com/leenzhu/joplin-plugin-journal",
