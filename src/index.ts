@@ -395,8 +395,9 @@ joplin.plugins.register({
 			const timeFmt = await joplin.settings.value('TimeFmt') || 0;
 			const theme = await joplin.settings.value('Theme') || "light"
 			const enableWeekNum = await joplin.settings.value('WeekNum') || false
-			const enableCalendarHighlight = await joplin.settings.value("HighlightCalendar")
-			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCalendarHighlight=${enableCalendarHighlight}></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
+			const enableCreatedHighlight = await joplin.settings.value("HighlightCreated")
+			const disableUnwrittenHighlight = await joplin.settings.value("DisableUnwrittenHighlight")
+			await dialogs.setHtml(dialog, `<form name="picker"><div id="datepicker" iso8601=${iso8601} timeFmt=${timeFmt} theme=${theme} weekNum=${enableWeekNum} enableCreatedHighlight=${enableCreatedHighlight} disableUnwrittenHighlight="${disableUnwrittenHighlight}"></div><input id="j_date" name="date" type="hidden"><input id="j_time" name="time" type="hidden"></form>`);
 			joplin.views.panels.onMessage(dialog, async (msg) => {
 				if(msg.type == "noteExists"){
 					// Convert the date to local time
@@ -417,9 +418,13 @@ joplin.plugins.register({
 						}
 						return false
 					}
-					let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note" })
+					let notes = await joplin.data.get(["search"], { query: noteTitle, type: "note", fields: ["parent_id", "body"] })
 					for(const note of notes.items){
 						if(await traverse(note.parent_id, paths.length - 1)){
+							if (disableUnwrittenHighlight) {
+								const noteTemplateBody = await makeTemplateBody(d);
+								return noteTemplateBody !== note.body;
+							}
 							return true
 						}
 					}
@@ -650,14 +655,23 @@ joplin.plugins.register({
 				label: 'Tag Names',
 				description: "Custom tag names, each value is separated by ','. eg",
 			},
-			'HighlightCalendar': {
+			'HighlightCreated': {
 				value: false,
 				type: SettingItemType.Bool,
 				section: 'Journal',
 				public: true,
 				advanced: true,
-				label: 'Enable Calendar Highlights',
+				label: 'Enable Calendar Highlights for Dates with Notes',
 				description: "Highlight days with notes on the calendar",
+			},
+			'DisableUnwrittenHighlight': {
+				value: false,
+				type: SettingItemType.Bool,
+				section: 'Journal',
+				public: true,
+				advanced: true,
+				label: 'Disable Highlights for Default Notes',
+				description: "Disable highlights for days without any content or only the template",
 			},
 		});
 
