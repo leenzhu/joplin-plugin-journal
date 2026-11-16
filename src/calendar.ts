@@ -27,7 +27,7 @@ const monday_first = date_ele.getAttribute('iso8601') === 'true'
 const timeFmt:any = parseInt(date_ele.getAttribute('timeFmt'),10)
 const theme:any = date_ele.getAttribute('theme')
 const enableWeekNum = date_ele.getAttribute('weekNum') === 'true'
-const enableCalendarHighlight = date_ele.getAttribute('enableCalendarHighlight') === "true"
+const enableCreatedHighlight = date_ele.getAttribute('enableCreatedHighlight') === "true"
 
 const calendar = new VanillaCalendar('#datepicker', {
     actions: {
@@ -44,7 +44,7 @@ const calendar = new VanillaCalendar('#datepicker', {
             console.log(`Vanilla Calendar: keeping: ${keeping}`)
        },
        getDays(day, date, HTMLElement, HTMLButtonElement) {
-            if(enableCalendarHighlight){
+            if(enableCreatedHighlight){
                 webviewApi.postMessage({"type": "noteExists", "date": date}).then(res => {
                     if(res){
                         HTMLButtonElement.classList.add("vanilla-calendar-day_noted");
